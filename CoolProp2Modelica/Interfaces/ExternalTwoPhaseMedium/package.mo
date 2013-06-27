@@ -12,6 +12,7 @@ import CoolProp2Modelica.Common.InputChoice;
   constant String substanceName = substanceNames[1]
   "Only one substance can be specified";
 
+
   redeclare record extends FluidConstants "external fluid constants"
     MolarMass molarMass "molecular mass";
     Temperature criticalTemperature "critical temperature";
@@ -35,6 +36,7 @@ import CoolProp2Modelica.Common.InputChoice;
     dipoleMoment=         2.0);
   constant InputChoice inputChoice=InputChoice.ph
   "Default choice of input variables for property computations";
+
 
   redeclare replaceable record extends ThermodynamicState
     PrandtlNumber Pr "prandtl number";

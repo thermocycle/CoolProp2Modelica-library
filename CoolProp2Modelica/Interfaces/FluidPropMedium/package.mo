@@ -4,6 +4,7 @@ partial package FluidPropMedium "FluidProp medium package"
   constant Real h_eps_sat = 1e-6
   "small delta h to ensure computation in the correct phase";
 
+
   redeclare replaceable function setBubbleState
   "Set the thermodynamic state on the bubble line"
     extends Modelica.Icons.Function;

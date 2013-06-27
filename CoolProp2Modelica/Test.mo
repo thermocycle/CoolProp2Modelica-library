@@ -986,4 +986,57 @@ package Test "Test models"
     drdp = wf.density_derp_h(fluid);
     drdh = wf.density_derh_p(fluid);
   end test_R245fa_ThermodynamicState;
+
+  model test_InputChoices
+    "Some test cases for the different Inputchoices from the enumeration"
+
+    constant String fluidIdentifier = "n-Pentane";
+
+    replaceable package ph = CoolProp2Modelica.Interfaces.CoolPropMedium (
+    mediumName=fluidIdentifier,
+    substanceNames={fluidIdentifier},
+    ThermoStates=Modelica.Media.Interfaces.PartialMedium.Choices.IndependentVariables.ph) constrainedby
+      Modelica.Media.Interfaces.PartialMedium "Medium model";
+
+    replaceable package dT = CoolProp2Modelica.Interfaces.CoolPropMedium (
+    mediumName=fluidIdentifier,
+    substanceNames={fluidIdentifier},
+    ThermoStates=Modelica.Media.Interfaces.PartialMedium.Choices.IndependentVariables.dT) constrainedby
+      Modelica.Media.Interfaces.PartialMedium "Medium model";
+
+    replaceable package ps = CoolProp2Modelica.Interfaces.CoolPropMedium (
+    mediumName=fluidIdentifier,
+    substanceNames={fluidIdentifier},
+    ThermoStates=Modelica.Media.Interfaces.PartialMedium.Choices.IndependentVariables.ps) constrainedby
+      Modelica.Media.Interfaces.PartialMedium "Medium model";
+
+       replaceable package hs = CoolProp2Modelica.Interfaces.CoolPropMedium (
+         mediumName=fluidIdentifier,
+         substanceNames={fluidIdentifier},
+         ThermoStates=Modelica.Media.Interfaces.PartialMedium.Choices.IndependentVariables.hs)
+       constrainedby Modelica.Media.Interfaces.PartialMedium "Medium model";
+
+    ph.ThermodynamicState fluid "Properties of the two-phase fluid";
+    Modelica.SIunits.SpecificEnthalpy h;
+    Modelica.SIunits.Pressure p;
+    Modelica.SIunits.DerDensityByEnthalpy drdh
+      "Derivative of average density by enthalpy";
+    Modelica.SIunits.DerDensityByPressure drdp
+      "Derivative of average density by pressure";
+
+    dT.ThermodynamicState fluid_dT "Properties of the two-phase fluid";
+    ps.ThermodynamicState fluid_ps "Properties of the two-phase fluid";
+    hs.ThermodynamicState fluid_hs "Properties of the two-phase fluid";
+
+  equation
+    p = 1E5;
+    h = -1.5e5 + 2*time*1E5;
+    fluid = ph.setState_ph(p=p,h=h);
+    drdp = ph.density_derp_h(fluid);
+    drdh = ph.density_derh_p(fluid);
+
+    fluid_dT = dT.setState_dT(d=fluid.d,T=fluid.T);
+    fluid_ps = ps.setState_ps(p=fluid.p,s=fluid.s);
+    fluid_hs = hs.setState_hs(h=fluid_ps.h,s=fluid.s);
+  end test_InputChoices;
 end Test;
