@@ -86,10 +86,11 @@ import CoolProp2Modelica.Common.InputChoice;
                             StateSelect.prefer else StateSelect.default),
     T(stateSelect = if preferredMediumStates and
                        (basePropertiesInputChoice == InputChoice.pT or
-                       basePropertiesInputChoice == InputChoice.dT) then
+                        basePropertiesInputChoice == InputChoice.dT) then
                          StateSelect.prefer else StateSelect.default),
     h(stateSelect = if preferredMediumStates and
-                       basePropertiesInputChoice == InputChoice.ph then
+                       (basePropertiesInputChoice == InputChoice.ph or
+                        basePropertiesInputChoice == InputChoice.hs) then
                          StateSelect.prefer else StateSelect.default),
     d(stateSelect = if preferredMediumStates and
                        basePropertiesInputChoice == InputChoice.dT then
@@ -102,7 +103,8 @@ import CoolProp2Modelica.Common.InputChoice;
     Integer phaseOutput
     "Phase output for medium, 2 for two-phase, 1 for one-phase";
     SpecificEntropy s(
-      stateSelect = if basePropertiesInputChoice == InputChoice.ps then
+      stateSelect = if (basePropertiesInputChoice == InputChoice.ps or
+                        basePropertiesInputChoice == InputChoice.hs) then
                        StateSelect.prefer else StateSelect.default)
     "Specific entropy";
     SaturationProperties sat "saturation property record";
@@ -137,6 +139,11 @@ import CoolProp2Modelica.Common.InputChoice;
       d = density(state);
       h = specificEnthalpy(state);
       T = temperature(state);
+    elseif (basePropertiesInputChoice == InputChoice.hs) then
+      state = setState_hs(h, s, phaseInput);
+      d = density(state);
+      p = pressure(state);
+      T = temperature(state);
     end if;
     // Compute the internal energy
     u = h - p/d;
@@ -157,6 +164,9 @@ import CoolProp2Modelica.Common.InputChoice;
        elseif basePropertiesInputChoice == InputChoice.ps then
          phaseOutput = if ((s > bubbleEntropy(sat) and s < dewEntropy(sat)) and
                             p < fluidConstants[1].criticalPressure) then 2 else 1;
+       elseif basePropertiesInputChoice == InputChoice.hs then
+         phaseOutput = if ((s > bubbleEntropy(sat) and s < dewEntropy(sat)) and
+                           (h > bubbleEnthalpy(sat) and h < dewEnthalpy(sat))) then 2 else 1;
        else
          // basePropertiesInputChoice == pT
          phaseOutput = 1;
@@ -253,6 +263,19 @@ import CoolProp2Modelica.Common.InputChoice;
   end setState_ps;
 
 
+  redeclare replaceable function setState_hs
+  "Return thermodynamic state record from h and s"
+    extends Modelica.Icons.Function;
+    input SpecificEnthalpy h "specific enthalpy";
+    input SpecificEntropy s "specific entropy";
+    input FixedPhase phase = 0
+    "2 for two-phase, 1 for one-phase, 0 if not known";
+    output ThermodynamicState state;
+  external "C" TwoPhaseMedium_setState_hs_(h, s, phase, state, mediumName, libraryName, substanceName)
+    annotation(Include="#include <CoolPropLib.h>", Library="CoolPropLib");
+  end setState_hs;
+
+
   replaceable partial function setSat_p_state_dummy
   "Return dummy values for the saturation properties from the state"
     extends Modelica.Icons.Function;
@@ -321,6 +344,14 @@ import CoolProp2Modelica.Common.InputChoice;
     // The composition is an empty vector
     state :=setState_ps(p, s, phase);
   end setState_psX;
+
+
+  replaceable function setState_hsX
+                                    extends Modelica.Icons.Function;
+  algorithm
+    // The composition is an empty vector
+    state :=setState_hs(h, s, phase);
+  end setState_hsX;
 
 
   redeclare replaceable function density_ph "Return density from p and h"
@@ -491,6 +522,48 @@ import CoolProp2Modelica.Common.InputChoice;
     h := specificEnthalpy(setState_ps(p,s, phase));
     annotation(Inline = true);
   end specificEnthalpy_ps;
+
+
+  redeclare replaceable function density_hs "Return density from h and s"
+    extends Modelica.Icons.Function;
+    input SpecificEnthalpy h "Specific enthalpy";
+    input SpecificEntropy s "Specific entropy";
+    input FixedPhase phase = 0
+    "2 for two-phase, 1 for one-phase, 0 if not known";
+    output Density d "Density";
+  algorithm
+    d := density(setState_hs(h, s, phase));
+    // To be implemented:
+    //     annotation(derivative(noDerivative = phase) = density_hs_der,
+    //                Inline = true);
+  end density_hs;
+
+
+  redeclare replaceable function temperature_hs
+  "Return temperature from h and s"
+    extends Modelica.Icons.Function;
+    input SpecificEnthalpy h "Specific enthalpy";
+    input SpecificEntropy s "Specific entropy";
+    input FixedPhase phase = 0
+    "2 for two-phase, 1 for one-phase, 0 if not known";
+    output Temperature T "Temperature";
+  algorithm
+    T := temperature(setState_hs(h, s, phase));
+    annotation(Inline = true);
+  end temperature_hs;
+
+
+  redeclare replaceable function pressure_hs "Return pressure from h and s"
+    extends Modelica.Icons.Function;
+    input SpecificEnthalpy h "Specific enthalpy";
+    input SpecificEntropy s "Specific entropy";
+    input FixedPhase phase = 0
+    "2 for two-phase, 1 for one-phase, 0 if not known";
+    output AbsolutePressure p "Pressure";
+  algorithm
+    p := pressure(setState_hs(h,s, phase));
+    annotation(Inline = true);
+  end pressure_hs;
 
 
   redeclare function extends prandtlNumber
