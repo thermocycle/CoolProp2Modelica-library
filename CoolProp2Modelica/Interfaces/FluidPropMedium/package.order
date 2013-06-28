@@ -1,4 +1,5 @@
 h_eps_sat
+BaseProperties
 setBubbleState
 setDewState
 bubbleEntropy

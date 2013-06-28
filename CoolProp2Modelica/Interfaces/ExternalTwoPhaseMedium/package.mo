@@ -79,21 +79,23 @@ import CoolProp2Modelica.Common.InputChoice;
 
 
   redeclare replaceable model extends BaseProperties(
-    p(stateSelect = if preferredMediumStates and
-                       (basePropertiesInputChoice == InputChoice.ph or
-                        basePropertiesInputChoice == InputChoice.pT or
-                        basePropertiesInputChoice == InputChoice.ps) then
-                            StateSelect.prefer else StateSelect.default),
-    T(stateSelect = if preferredMediumStates and
-                       (basePropertiesInputChoice == InputChoice.pT or
-                       basePropertiesInputChoice == InputChoice.dT) then
-                         StateSelect.prefer else StateSelect.default),
-    h(stateSelect = if preferredMediumStates and
-                       basePropertiesInputChoice == InputChoice.ph then
-                         StateSelect.prefer else StateSelect.default),
-    d(stateSelect = if preferredMediumStates and
-                       basePropertiesInputChoice == InputChoice.dT then
-                         StateSelect.prefer else StateSelect.default))
+      p(stateSelect = if preferredMediumStates and
+                         (basePropertiesInputChoice == InputChoice.ph or
+                          basePropertiesInputChoice == InputChoice.pT or
+                          basePropertiesInputChoice == InputChoice.ps) then
+                              StateSelect.prefer else StateSelect.default),
+      T(stateSelect = if preferredMediumStates and
+                         (basePropertiesInputChoice == InputChoice.pT or
+                          basePropertiesInputChoice == InputChoice.dT) then
+                           StateSelect.prefer else StateSelect.default),
+      h(stateSelect = if preferredMediumStates and
+                         (basePropertiesInputChoice == InputChoice.ph or
+                          basePropertiesInputChoice == InputChoice.hs) then
+                           StateSelect.prefer else StateSelect.default),
+      d(stateSelect = if preferredMediumStates and
+                         basePropertiesInputChoice == InputChoice.dT then
+                           StateSelect.prefer else StateSelect.default))
+
   import CoolProp2Modelica.Common.InputChoice;
     parameter InputChoice basePropertiesInputChoice=inputChoice
     "Choice of input variables for property computations";
@@ -102,7 +104,8 @@ import CoolProp2Modelica.Common.InputChoice;
     Integer phaseOutput
     "Phase output for medium, 2 for two-phase, 1 for one-phase";
     SpecificEntropy s(
-      stateSelect = if basePropertiesInputChoice == InputChoice.ps then
+      stateSelect = if (basePropertiesInputChoice == InputChoice.ps or
+                        basePropertiesInputChoice == InputChoice.hs) then
                        StateSelect.prefer else StateSelect.default)
     "Specific entropy";
     SaturationProperties sat "saturation property record";
@@ -157,6 +160,9 @@ import CoolProp2Modelica.Common.InputChoice;
        elseif basePropertiesInputChoice == InputChoice.ps then
          phaseOutput = if ((s > bubbleEntropy(sat) and s < dewEntropy(sat)) and
                             p < fluidConstants[1].criticalPressure) then 2 else 1;
+       elseif basePropertiesInputChoice == InputChoice.hs then
+         phaseOutput = if ((s > bubbleEntropy(sat) and s < dewEntropy(sat)) and
+                           p < fluidConstants[1].criticalPressure) then 2 else 1;
        else
          // basePropertiesInputChoice == pT
          phaseOutput = 1;

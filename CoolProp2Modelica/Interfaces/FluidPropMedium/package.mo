@@ -4,7 +4,12 @@ partial package FluidPropMedium "FluidProp medium package"
   constant Real h_eps_sat = 1e-6
   "small delta h to ensure computation in the correct phase";
 
-//    assert(not (basePropertiesInputChoice == InputChoice.hs),"FluidProp does not support f(h,s)");
+  import CoolProp2Modelica.Common.InputChoice;
+
+  redeclare replaceable model extends BaseProperties
+  equation
+  assert(not (basePropertiesInputChoice == InputChoice.hs),"FluidProp does not support f(h,s)");
+  end BaseProperties;
 
 
   redeclare replaceable function setBubbleState
