@@ -6,43 +6,44 @@ partial package CoolPropMedium
 
   redeclare replaceable model extends BaseProperties(
     p(stateSelect = if preferredMediumStates and
-                       (basePropertiesInputChoice == InputChoice.ph or
-                        basePropertiesInputChoice == InputChoice.pT or
-                        basePropertiesInputChoice == InputChoice.ps) then
+                       (basePropertiesInputChoiceCP == InputChoiceCoolProp.ph or
+                        basePropertiesInputChoiceCP == InputChoiceCoolProp.pT or
+                        basePropertiesInputChoiceCP == InputChoiceCoolProp.ps) then
                             StateSelect.prefer else StateSelect.default),
     T(stateSelect = if preferredMediumStates and
-                       (basePropertiesInputChoice == InputChoice.pT or
-                        basePropertiesInputChoice == InputChoice.dT) then
+                       (basePropertiesInputChoiceCP == InputChoiceCoolProp.pT or
+                        basePropertiesInputChoiceCP == InputChoiceCoolProp.dT) then
                          StateSelect.prefer else StateSelect.default),
     h(stateSelect = if preferredMediumStates and
-                       (basePropertiesInputChoice == InputChoice.ph or
-                        basePropertiesInputChoice == InputChoice.hs) then
+                       (basePropertiesInputChoiceCP == InputChoiceCoolProp.ph or
+                        basePropertiesInputChoiceCP == InputChoiceCoolProp.hs) then
                          StateSelect.prefer else StateSelect.default),
     d(stateSelect = if preferredMediumStates and
-                       basePropertiesInputChoice == InputChoice.dT then
+                       basePropertiesInputChoiceCP == InputChoiceCoolProp.dT then
                          StateSelect.prefer else StateSelect.default))
-  import CoolProp2Modelica.Common.InputChoice;
-    parameter InputChoice basePropertiesInputChoice=inputChoice
+  import CoolProp2Modelica.Common.InputChoiceCoolProp;
+  constant InputChoiceCoolProp inputChoiceCP=InputChoiceCoolProp.ph;
+  redeclare parameter InputChoiceCoolProp basePropertiesInputChoiceCP = inputChoiceCP
       "Choice of input variables for property computations";
     FixedPhase phaseInput
       "Phase input for property computation functions, 2 for two-phase, 1 for one-phase, 0 if not known";
     Integer phaseOutput
       "Phase output for medium, 2 for two-phase, 1 for one-phase";
     SpecificEntropy s(
-      stateSelect = if (basePropertiesInputChoice == InputChoice.ps or
-                        basePropertiesInputChoice == InputChoice.hs) then
+      stateSelect = if (basePropertiesInputChoiceCP == InputChoiceCoolProp.ps or
+                        basePropertiesInputChoiceCP == InputChoiceCoolProp.hs) then
                        StateSelect.prefer else StateSelect.default)
       "Specific entropy";
     SaturationProperties sat "saturation property record";
   equation
     MM = externalFluidConstants.molarMass;
     R = Modelica.Constants.R/MM;
-    if (onePhase or (basePropertiesInputChoice == InputChoice.pT)) then
+    if (onePhase or (basePropertiesInputChoiceCP == InputChoiceCoolProp.pT)) then
       phaseInput = 1 "Force one-phase property computation";
     else
       phaseInput = 0 "Unknown phase";
     end if;
-    if (basePropertiesInputChoice == InputChoice.ph) then
+    if (basePropertiesInputChoiceCP == InputChoiceCoolProp.ph) then
       // Compute the state record (including the unique ID)
       state = setState_ph(p, h, phaseInput);
       // Modification of the ExternalMedia code to reduce the number of calls:
@@ -50,22 +51,22 @@ partial package CoolPropMedium
       d = density(state);
       T = temperature(state);
       s = specificEntropy(state);
-    elseif (basePropertiesInputChoice == InputChoice.dT) then
+    elseif (basePropertiesInputChoiceCP == InputChoiceCoolProp.dT) then
       state = setState_dT(d, T, phaseInput);
       h = specificEnthalpy(state);
       p = pressure(state);
       s = specificEntropy(state);
-    elseif (basePropertiesInputChoice == InputChoice.pT) then
+    elseif (basePropertiesInputChoiceCP == InputChoiceCoolProp.pT) then
       state = setState_pT(p, T, phaseInput);
       d = density(state);
       h = specificEnthalpy(state);
       s = specificEntropy(state);
-    elseif (basePropertiesInputChoice == InputChoice.ps) then
+    elseif (basePropertiesInputChoiceCP == InputChoiceCoolProp.ps) then
       state = setState_ps(p, s, phaseInput);
       d = density(state);
       h = specificEnthalpy(state);
       T = temperature(state);
-    elseif (basePropertiesInputChoice == InputChoice.hs) then
+    elseif (basePropertiesInputChoiceCP == InputChoiceCoolProp.hs) then
       state = setState_hs(h, s, phaseInput);
       d = density(state);
       p = pressure(state);
@@ -81,20 +82,20 @@ partial package CoolPropMedium
       phaseOutput = state.phase;
      else
        // Event generation at phase boundary crossing
-       if basePropertiesInputChoice == InputChoice.ph then
+       if basePropertiesInputChoiceCP == InputChoiceCoolProp.ph then
          phaseOutput = if ((h > bubbleEnthalpy(sat) and h < dewEnthalpy(sat)) and
                             p < fluidConstants[1].criticalPressure) then 2 else 1;
-       elseif basePropertiesInputChoice == InputChoice.dT then
-         phaseOutput = if  ((d < bubbleDensity(sat) and d > dewDensity(sat)) and
+       elseif basePropertiesInputChoiceCP == InputChoiceCoolProp.dT then
+         phaseOutput = if ((d < bubbleDensity(sat) and d > dewDensity(sat)) and
                              T < fluidConstants[1].criticalTemperature) then 2 else 1;
-       elseif basePropertiesInputChoice == InputChoice.ps then
+       elseif basePropertiesInputChoiceCP == InputChoiceCoolProp.ps then
          phaseOutput = if ((s > bubbleEntropy(sat) and s < dewEntropy(sat)) and
                             p < fluidConstants[1].criticalPressure) then 2 else 1;
-       elseif basePropertiesInputChoice == InputChoice.hs then
+       elseif basePropertiesInputChoiceCP == InputChoiceCoolProp.hs then
          phaseOutput = if ((s > bubbleEntropy(sat) and s < dewEntropy(sat)) and
                            p < fluidConstants[1].criticalPressure) then 2 else 1;
        else
-         // basePropertiesInputChoice == pT
+         // basePropertiesInputChoiceCP == pT
          phaseOutput = 1;
        end if;
      end if;

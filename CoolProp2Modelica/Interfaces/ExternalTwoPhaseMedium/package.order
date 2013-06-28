@@ -15,14 +15,12 @@ setState_ph
 setState_pT
 setState_dT
 setState_ps
-setState_hs
 setSat_p_state_dummy
 setSat_p_state
 setState_phX
 setState_pTX
 setState_dTX
 setState_psX
-setState_hsX
 density_ph
 temperature_ph
 specificEntropy_ph
@@ -35,9 +33,6 @@ density_ps
 density_ps_der
 temperature_ps
 specificEnthalpy_ps
-density_hs
-temperature_hs
-pressure_hs
 prandtlNumber
 temperature
 velocityOfSound
