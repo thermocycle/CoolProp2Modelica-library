@@ -198,6 +198,34 @@ package Test "Test models"
             redeclare package Medium = Medium, sat=baseProperties.sat);
       end CompleteBaseProperties;
     end GenericModels;
+
+    model TestIsentropicExpansion "Test the function for isentropic enthalpy"
+      replaceable package Medium =
+          CoolProp2Modelica.Media.R601_CP                          constrainedby
+        Modelica.Media.Interfaces.PartialMedium annotation (choicesAllMatching=true);
+      Medium.SpecificEnthalpy h_in;
+      Medium.AbsolutePressure p_in;
+      Medium.ThermodynamicState state_in;
+      Medium.SpecificEnthalpy h_out;
+      Medium.AbsolutePressure p_out;
+      Medium.ThermodynamicState state_out;
+      Medium.SpecificEnthalpy h_out2;
+      Medium.AbsolutePressure p_out2;
+      Medium.ThermodynamicState state_out2;
+      Medium.SpecificEntropy s_out2;
+    equation
+      h_in      = 300e3;
+      p_in      = 10e5;
+      state_in  = Medium.setState_phX(p_in,h_in);
+      h_out     = Medium.isentropicEnthalpy(p_out,state_in);
+      p_out     = 2e5;
+      state_out = Medium.setState_phX(p_out,h_out);
+
+      s_out2    = Medium.specificEntropy(state_in);
+      h_out2    = Medium.specificEnthalpy(state_out2);
+      p_out2    = p_out;
+      state_out2= Medium.setState_psX(p_out2,s_out2);
+    end TestIsentropicExpansion;
   end TestMedium;
 
   package FluidProp "Test cases for FluidPropMedium"
@@ -1039,4 +1067,11 @@ package Test "Test models"
     fluid_ps = ps.setState_ps(p=fluid.p,s=fluid.s);
     fluid_hs = hs.setState_hs(h=fluid_ps.h,s=fluid.s);
   end test_InputChoices;
+
+  model R600_TestModel "Test Butane"
+
+  extends Modelica.Media.Examples.Tests.Components.PartialTestModel(
+  redeclare package Medium = CoolProp2Modelica.Media.R600_CP);
+
+  end R600_TestModel;
 end Test;
