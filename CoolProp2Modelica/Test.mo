@@ -226,6 +226,21 @@ package Test "Test models"
       p_out2    = p_out;
       state_out2= Medium.setState_psX(p_out2,s_out2);
     end TestIsentropicExpansion;
+
+    model TestIsentropicExponent "Test the function for isentropic enthalpy"
+      replaceable package Medium =
+          CoolProp2Modelica.Media.R601_CP                          constrainedby
+        Modelica.Media.Interfaces.PartialMedium annotation (choicesAllMatching=true);
+      Medium.SpecificEnthalpy h_in;
+      Medium.AbsolutePressure p_in;
+      Medium.ThermodynamicState state_in;
+      Medium.IsentropicExponent gamma;
+    equation
+      h_in      = 300e3+100e3*time;
+      p_in      = 10e5;
+      state_in  = Medium.setState_phX(p_in,h_in);
+      gamma     = CoolProp2Modelica.Interfaces.CoolPropMedium.isentropicExponent(state_in);
+    end TestIsentropicExponent;
   end TestMedium;
 
   package FluidProp "Test cases for FluidPropMedium"

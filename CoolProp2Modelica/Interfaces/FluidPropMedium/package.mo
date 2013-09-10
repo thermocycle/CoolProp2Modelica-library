@@ -6,6 +6,7 @@ partial package FluidPropMedium "FluidProp medium package"
 
   import CoolProp2Modelica.Common.InputChoice;
 
+
   redeclare replaceable model extends BaseProperties
   equation
   assert(not (basePropertiesInputChoice == InputChoice.hs),"FluidProp does not support f(h,s)");

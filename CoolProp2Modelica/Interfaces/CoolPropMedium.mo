@@ -71,4 +71,14 @@ algorithm
   annotation(Inline = true);
 end pressure_hs;
 
+redeclare replaceable function extends isentropicExponent
+    "Return isentropic exponent"
+  extends Modelica.Icons.Function;
+  input ThermodynamicState state "thermodynamic state record";
+  output IsentropicExponent gamma "Isentropic exponent";
+algorithm
+  gamma := density(state) / pressure(state) * velocityOfSound(state) * velocityOfSound(state);
+  annotation(Inline = true);
+end isentropicExponent;
+
 end CoolPropMedium;
