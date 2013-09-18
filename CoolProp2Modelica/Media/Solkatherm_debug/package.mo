@@ -1,8 +1,7 @@
 within CoolProp2Modelica.Media;
 package Solkatherm_debug "Solkatherm properties using CoolProp with debug option"
-  extends CoolProp2Modelica.Interfaces.ExternalTwoPhaseMedium(
+  extends CoolProp2Modelica.Interfaces.CoolPropMedium(
   mediumName="SES36",
-  libraryName="CoolProp",
   substanceName="SES36|calc_transport=0|debug=1|enable_TTSE=1",
   ThermoStates=Modelica.Media.Interfaces.PartialMedium.Choices.IndependentVariables.ph);
     // calc_transport: set to one to compute the transport properties (not yet implemented in January 2013)

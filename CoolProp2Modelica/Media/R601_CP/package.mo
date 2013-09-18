@@ -1,8 +1,7 @@
 within CoolProp2Modelica.Media;
 package R601_CP "R601, n-Pentane properties using CoolProp"
-  extends CoolProp2Modelica.Interfaces.ExternalTwoPhaseMedium(
+  extends CoolProp2Modelica.Interfaces.CoolPropMedium(
   mediumName="n-Pentane",
-  libraryName="CoolProp",
   substanceNames={"n-Pentane"},
   ThermoStates=Modelica.Media.Interfaces.PartialMedium.Choices.IndependentVariables.ph);
 

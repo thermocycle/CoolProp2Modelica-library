@@ -78,7 +78,15 @@ redeclare replaceable function extends isentropicExponent
   output IsentropicExponent gamma "Isentropic exponent";
 algorithm
   gamma := density(state) / pressure(state) * velocityOfSound(state) * velocityOfSound(state);
-  annotation(Inline = true);
 end isentropicExponent;
+
+redeclare replaceable function extends specificInternalEnergy
+    "Returns specific internal energy"
+  extends Modelica.Icons.Function;
+  input ThermodynamicState state "thermodynamic state record";
+  output SpecificInternalEnergy u "specific internal energy";
+algorithm
+  u := specificEnthalpy(state) - pressure(state)/density(state);
+end specificInternalEnergy;
 
 end CoolPropMedium;

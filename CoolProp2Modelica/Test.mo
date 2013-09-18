@@ -199,48 +199,6 @@ package Test "Test models"
       end CompleteBaseProperties;
     end GenericModels;
 
-    model TestIsentropicExpansion "Test the function for isentropic enthalpy"
-      replaceable package Medium =
-          CoolProp2Modelica.Media.R601_CP                          constrainedby
-        Modelica.Media.Interfaces.PartialMedium annotation (choicesAllMatching=true);
-      Medium.SpecificEnthalpy h_in;
-      Medium.AbsolutePressure p_in;
-      Medium.ThermodynamicState state_in;
-      Medium.SpecificEnthalpy h_out;
-      Medium.AbsolutePressure p_out;
-      Medium.ThermodynamicState state_out;
-      Medium.SpecificEnthalpy h_out2;
-      Medium.AbsolutePressure p_out2;
-      Medium.ThermodynamicState state_out2;
-      Medium.SpecificEntropy s_out2;
-    equation
-      h_in      = 300e3;
-      p_in      = 10e5;
-      state_in  = Medium.setState_phX(p_in,h_in);
-      h_out     = Medium.isentropicEnthalpy(p_out,state_in);
-      p_out     = 2e5;
-      state_out = Medium.setState_phX(p_out,h_out);
-
-      s_out2    = Medium.specificEntropy(state_in);
-      h_out2    = Medium.specificEnthalpy(state_out2);
-      p_out2    = p_out;
-      state_out2= Medium.setState_psX(p_out2,s_out2);
-    end TestIsentropicExpansion;
-
-    model TestIsentropicExponent "Test the function for isentropic enthalpy"
-      replaceable package Medium =
-          CoolProp2Modelica.Media.R601_CP                          constrainedby
-        Modelica.Media.Interfaces.PartialMedium annotation (choicesAllMatching=true);
-      Medium.SpecificEnthalpy h_in;
-      Medium.AbsolutePressure p_in;
-      Medium.ThermodynamicState state_in;
-      Medium.IsentropicExponent gamma;
-    equation
-      h_in      = 300e3+100e3*time;
-      p_in      = 10e5;
-      state_in  = Medium.setState_phX(p_in,h_in);
-      gamma     = CoolProp2Modelica.Interfaces.CoolPropMedium.isentropicExponent(state_in);
-    end TestIsentropicExponent;
   end TestMedium;
 
   package FluidProp "Test cases for FluidPropMedium"
@@ -872,6 +830,158 @@ package Test "Test models"
     end test;
     annotation ();
   end benchmark;
+
+  package TestFunctions
+    model TestIsentropicExpansion "Test the function for isentropic enthalpy"
+      replaceable package Medium =
+          CoolProp2Modelica.Media.R601_CP                          constrainedby
+        Modelica.Media.Interfaces.PartialMedium annotation (choicesAllMatching=true);
+      Medium.SpecificEnthalpy h_in;
+      Medium.AbsolutePressure p_in;
+      Medium.ThermodynamicState state_in;
+      Medium.SpecificEnthalpy h_out;
+      Medium.AbsolutePressure p_out;
+      Medium.ThermodynamicState state_out;
+      Medium.SpecificEnthalpy h_out2;
+      Medium.AbsolutePressure p_out2;
+      Medium.ThermodynamicState state_out2;
+      Medium.SpecificEntropy s_out2;
+    equation
+      h_in      = 300e3;
+      p_in      = 10e5;
+      state_in  = Medium.setState_phX(p_in,h_in);
+      h_out     = Medium.isentropicEnthalpy(p_out,state_in);
+      p_out     = 2e5;
+      state_out = Medium.setState_phX(p_out,h_out);
+
+      s_out2    = Medium.specificEntropy(state_in);
+      h_out2    = Medium.specificEnthalpy(state_out2);
+      p_out2    = p_out;
+      state_out2= Medium.setState_psX(p_out2,s_out2);
+    end TestIsentropicExpansion;
+
+    model TestIsentropicExponent "Test the function for isentropic enthalpy"
+      replaceable package Medium =
+          CoolProp2Modelica.Media.R601_CP                          constrainedby
+        Modelica.Media.Interfaces.PartialMedium annotation (choicesAllMatching=true);
+      Medium.SpecificEnthalpy h_in;
+      //Medium.SpecificEnthalpy hA(start=h_in);
+      //Medium.SpecificEnthalpy hB(start=h_in);
+
+      Medium.AbsolutePressure p_in;
+      Medium.AbsolutePressure pA(start=p_in);
+      Medium.AbsolutePressure pB(start=p_in);
+
+      Medium.ThermodynamicState state_in;
+      Medium.ThermodynamicState stateA;
+      Medium.ThermodynamicState stateB;
+
+      Medium.IsentropicExponent gamma;
+      Medium.IsentropicExponent gamma2;
+      Medium.IsentropicExponent gamma3;
+
+      Medium.SpecificEntropy s;
+      Medium.SpecificEntropy sA(start=s);
+      Medium.SpecificEntropy sB(start=s);
+
+      Modelica.SIunits.SpecificVolume v;
+      Modelica.SIunits.SpecificVolume vA;
+      Modelica.SIunits.SpecificVolume vB;
+
+      Modelica.SIunits.SpecificVolume dv=0.0001;
+
+      Medium.Density rho;
+      Real dpdv_s,dpdd_s,test1,test2;
+
+    equation
+      h_in      = 300e3+100e3*time;
+      p_in      = 10e5;
+      state_in  = Medium.setState_phX(p_in,h_in);
+      gamma     = CoolProp2Modelica.Interfaces.CoolPropMedium.isentropicExponent(state_in);
+      s         = Medium.specificEntropy(state_in);
+
+      stateA  = Medium.setState_psX(pA,sA);
+      stateB  = Medium.setState_psX(pB,sB);
+
+      sA = sB;
+      sB = s;
+
+      1/v  = Medium.density(state_in);
+      1/vA = Medium.density(stateA);
+      1/vB = Medium.density(stateB);
+      vA = v - 0.5*dv;
+      vB = v + 0.5*dv;
+
+      dpdv_s = (pA - pB) / ( vA - vB);
+      gamma2 = -v / p_in * dpdv_s;
+
+      rho    = 1/v;
+      dpdd_s = (pA - pB) / ( 1/vA - 1/vB);
+      gamma3 = rho / p_in * dpdd_s;
+
+      test1 = dpdv_s;
+      test2 = dpdd_s * (-1*(rho^2));
+
+      //gamma = -v/p * (dp/dv)_s;
+      //gamma = rho/p * (dp/drho)_s;
+
+    end TestIsentropicExponent;
+
+    model TestTwoPhaseCv "Test the two phase implementation of cv"
+      replaceable package Medium =
+          CoolProp2Modelica.Media.R718_CP                          constrainedby
+        Modelica.Media.Interfaces.PartialMedium annotation (choicesAllMatching=true);
+     //state to run through two-phase region
+      Medium.ThermodynamicState state "thermodynamic state record";
+      Medium.SpecificEnthalpy h;
+      Medium.AbsolutePressure p;
+      Medium.Density d=Medium.density(state);
+      Medium.Temperature T=Medium.temperature(state);
+     //saturation props
+      Medium.SaturationProperties sat = Medium.setSat_p(p);
+     // additional saturation properties
+      Medium.ThermodynamicState state_l = Medium.setState_dTX(sat.dl,sat.Tsat,Medium.X_default);
+      Medium.ThermodynamicState state_v = Medium.setState_dTX(sat.dv,sat.Tsat,Medium.X_default);
+     //things to compare..
+      Medium.SpecificHeatCapacity cv=Medium.specificHeatCapacityCv(state);
+      Medium.SpecificHeatCapacity a=Medium.velocityOfSound(state);
+     // cv derivatives
+      Real dudT_v_num;
+      Real dsvdT;
+      Real dsldT;
+      Real dxdT_v;
+      Real x;
+      Real dvldT;
+      Real dvvdT;
+      Real cv_new;
+      Medium.SaturationProperties sat1;
+      Real x1;
+      Real dxdT_v_num;
+    equation
+      h=5e5+2.5e6*time;
+      p=50e5;
+      state = Medium.setState_phX(p,h,Medium.X_default);
+     //numerical derivative for cv..
+      dudT_v_num = (Medium.specificInternalEnergy(Medium.setState_dTX(d,T+0.1,Medium.X_default)) - Medium.specificInternalEnergy(state))/0.1;
+     //analytical derivatives of u wrt T at saturation lines (that is cv - compare to dudt_v_num and cv)
+     //From Matthis paper
+      cv_new = sat.Tsat*dsldT + sat.Tsat*dxdT_v*(state_v.s-state_l.s) + x*sat.Tsat*(dsvdT - dsldT);
+     //From triple product rule (Matthis paper) and bridgeman table...
+      dsldT = state_l.cp/sat.Tsat - state_l.beta/state_l.d * sat.dTp^(-1);
+      dsvdT = state_v.cp/sat.Tsat - state_v.beta/state_v.d * sat.dTp^(-1);
+     //easy
+      x = (1/d-1/sat.dl)/(1/sat.dv-1/sat.dl);
+     //From Matthis paper
+      dxdT_v = (x*dvvdT + (1-x)*dvldT)/(1/state_l.d-1/state_v.d);
+     //From triple product rule (Matthis paper) and bridgeman table...
+      dvldT = state_l.beta/state_l.d - state_l.kappa/state_l.d * sat.dTp^(-1);
+      dvvdT = state_v.beta/state_v.d - state_v.kappa/state_v.d * sat.dTp^(-1);
+      sat1 = Medium.setSat_T(sat.Tsat+0.001);
+      x1 = (1/d-1/sat1.dl)/(1/sat1.dv-1/sat1.dl);
+      dxdT_v_num = (x1-x)/0.001;
+      // anew =
+    end TestTwoPhaseCv;
+  end TestFunctions;
 
   model test_propane_coolprop
     replaceable package wf = CoolProp2Modelica.Media.R290_CP constrainedby
