@@ -927,60 +927,73 @@ package Test "Test models"
 
     end TestIsentropicExponent;
 
-    model TestTwoPhaseCv "Test the two phase implementation of cv"
-      replaceable package Medium =
-          CoolProp2Modelica.Media.R718_CP                          constrainedby
-        Modelica.Media.Interfaces.PartialMedium annotation (choicesAllMatching=true);
-     //state to run through two-phase region
-      Medium.ThermodynamicState state "thermodynamic state record";
+    model TestTwoPhaseFunctions "Test the two phase implementation"
+
+      // Reference medium and medium models to check EXTTP
+      package MediumRef =   Modelica.Media.Water.WaterIF97_ph "Medium model";
+      package Medium =      CoolProp2Modelica.Interfaces.CoolPropMedium (substanceName="Water|calc_transport=1|debug=10|enable_TTSE=1|enable_EXTTP=0");
+      package MediumEXTTP = CoolProp2Modelica.Interfaces.CoolPropMedium (substanceName="Water|calc_transport=1|debug=10|enable_TTSE=1|enable_EXTTP=1");
+
+      //state to run through two-phase region, p and h as inputs
       Medium.SpecificEnthalpy h;
       Medium.AbsolutePressure p;
-      Medium.Density d=Medium.density(state);
-      Medium.Temperature T=Medium.temperature(state);
-     //saturation props
-      Medium.SaturationProperties sat = Medium.setSat_p(p);
-     // additional saturation properties
-      Medium.ThermodynamicState state_l = Medium.setState_dTX(sat.dl,sat.Tsat,Medium.X_default);
-      Medium.ThermodynamicState state_v = Medium.setState_dTX(sat.dv,sat.Tsat,Medium.X_default);
-     //things to compare..
-      Medium.SpecificHeatCapacity cv=Medium.specificHeatCapacityCv(state);
-      Medium.SpecificHeatCapacity a=Medium.velocityOfSound(state);
-     // cv derivatives
-      Real dudT_v_num;
-      Real dsvdT;
-      Real dsldT;
-      Real dxdT_v;
-      Real x;
-      Real dvldT;
-      Real dvvdT;
-      Real cv_new;
-      Medium.SaturationProperties sat1;
-      Real x1;
-      Real dxdT_v_num;
+      Medium.ThermodynamicState      state =      Medium.setState_phX(p,h,    Medium.X_default);
+      MediumRef.ThermodynamicState   stateRef =   MediumRef.setState_phX(p,h, MediumRef.X_default);
+      MediumEXTTP.ThermodynamicState stateEXTTP = MediumEXTTP.setState_phX(p,h,MediumEXTTP.X_default);
+
+      // Shortcuts to properties
+      Medium.Density                d = Medium.density(state);
+      Medium.Temperature            T = Medium.temperature(state);
+      Medium.SpecificEntropy        s = Medium.specificEntropy(state);
+      Medium.SpecificInternalEnergy u = Medium.specificInternalEnergy(state);
+
+      //saturation props
+      Medium.SaturationProperties      sat =      Medium.setSat_p(p);
+      MediumRef.SaturationProperties   satRef =   MediumRef.setSat_p(p);
+      MediumEXTTP.SaturationProperties satEXTTP = MediumEXTTP.setSat_p(p);
+
+      // Other values
+      Real beta,betaRef,betaEXTTP;
+      Real cp,cpRef,cpEXTTP;
+      Real cv,cvRef,cvEXTTP;
+      Real a,aRef,aEXTTP;
+      Real kappa,kappaRef,kappaEXTTP;
+      Real lambda,lambdaRef,lambdaEXTTP;
+      Real eta,etaRef,etaEXTTP;
+
     equation
       h=5e5+2.5e6*time;
       p=50e5;
-      state = Medium.setState_phX(p,h,Medium.X_default);
-     //numerical derivative for cv..
-      dudT_v_num = (Medium.specificInternalEnergy(Medium.setState_dTX(d,T+0.1,Medium.X_default)) - Medium.specificInternalEnergy(state))/0.1;
-     //analytical derivatives of u wrt T at saturation lines (that is cv - compare to dudt_v_num and cv)
-     //From Matthis paper
-      cv_new = sat.Tsat*dsldT + sat.Tsat*dxdT_v*(state_v.s-state_l.s) + x*sat.Tsat*(dsvdT - dsldT);
-     //From triple product rule (Matthis paper) and bridgeman table...
-      dsldT = state_l.cp/sat.Tsat - state_l.beta/state_l.d * sat.dTp^(-1);
-      dsvdT = state_v.cp/sat.Tsat - state_v.beta/state_v.d * sat.dTp^(-1);
-     //easy
-      x = (1/d-1/sat.dl)/(1/sat.dv-1/sat.dl);
-     //From Matthis paper
-      dxdT_v = (x*dvvdT + (1-x)*dvldT)/(1/state_l.d-1/state_v.d);
-     //From triple product rule (Matthis paper) and bridgeman table...
-      dvldT = state_l.beta/state_l.d - state_l.kappa/state_l.d * sat.dTp^(-1);
-      dvvdT = state_v.beta/state_v.d - state_v.kappa/state_v.d * sat.dTp^(-1);
-      sat1 = Medium.setSat_T(sat.Tsat+0.001);
-      x1 = (1/d-1/sat1.dl)/(1/sat1.dv-1/sat1.dl);
-      dxdT_v_num = (x1-x)/0.001;
-      // anew =
-    end TestTwoPhaseCv;
+
+      beta      = Medium.isobaricExpansionCoefficient(state);
+      betaRef   = MediumRef.isobaricExpansionCoefficient(stateRef);
+      betaEXTTP = MediumEXTTP.isobaricExpansionCoefficient(stateEXTTP);
+
+      cp      = Medium.specificHeatCapacityCp(state);
+      cpRef   = MediumRef.specificHeatCapacityCp(stateRef);
+      cpEXTTP = MediumEXTTP.specificHeatCapacityCp(stateEXTTP);
+
+      cv      = Medium.specificHeatCapacityCv(state);
+      cvRef   = MediumRef.specificHeatCapacityCv(stateRef);
+      cvEXTTP = MediumEXTTP.specificHeatCapacityCv(stateEXTTP);
+
+      a      = Medium.velocityOfSound(state);
+      aRef   = MediumRef.velocityOfSound(stateRef);
+      aEXTTP = MediumEXTTP.velocityOfSound(stateEXTTP);
+
+      kappa      = Medium.isothermalCompressibility(state);
+      kappaRef   = MediumRef.isothermalCompressibility(stateRef);
+      kappaEXTTP = MediumEXTTP.isothermalCompressibility(stateEXTTP);
+
+      lambda      = Medium.thermalConductivity(state);
+      lambdaRef   = MediumRef.thermalConductivity(stateRef);
+      lambdaEXTTP = MediumEXTTP.thermalConductivity(stateEXTTP);
+
+      eta      = Medium.dynamicViscosity(state);
+      etaRef   = MediumRef.dynamicViscosity(stateRef);
+      etaEXTTP = MediumEXTTP.dynamicViscosity(stateEXTTP);
+
+    end TestTwoPhaseFunctions;
   end TestFunctions;
 
   model test_propane_coolprop

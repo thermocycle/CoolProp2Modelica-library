@@ -1,8 +1,9 @@
 within CoolProp2Modelica.Interfaces;
 partial package CoolPropMedium
   extends ExternalTwoPhaseMedium(
-  mediumName = "CoolPropMedium",
-  final libraryName = "CoolProp");
+  final mediumName =     "CoolPropMedium",
+  final libraryName =    "CoolProp");
+
   import CoolProp2Modelica.Common.InputChoice;
   redeclare replaceable model extends BaseProperties
   equation
