@@ -1,7 +1,7 @@
 within CoolProp2Modelica.Interfaces;
 partial package CoolPropMedium
   extends ExternalTwoPhaseMedium(
-  final mediumName =     "CoolPropMedium",
+  mediumName =     "CoolPropMedium",
   final libraryName =    "CoolProp");
 
   import CoolProp2Modelica.Common.InputChoice;
