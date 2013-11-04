@@ -90,4 +90,13 @@ algorithm
   u := specificEnthalpy(state) - pressure(state)/density(state);
 end specificInternalEnergy;
 
+redeclare replaceable function isentropicEnthalpy
+  input AbsolutePressure p_downstream "downstream pressure";
+  input ThermodynamicState refState "reference state for entropy";
+  output SpecificEnthalpy h_is "Isentropic enthalpy";
+algorithm
+  assert((false),"This function is not defined in CoolProp");
+  h_is := p_downstream / refState.p * refState.h;
+end isentropicEnthalpy;
+
 end CoolPropMedium;
