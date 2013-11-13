@@ -38,7 +38,8 @@ import CoolProp2Modelica.Common.InputChoice;
   "Default choice of input variables for property computations";
 
 
-  redeclare replaceable record extends ThermodynamicState
+  redeclare replaceable record ThermodynamicState
+    FixedPhase phase(min=0,max=2,start=0);                                                   //SQmodif: removed "extends" and added FixedPhase with start value
     PrandtlNumber Pr "prandtl number";
     Temperature T "temperature";
     VelocityOfSound a "velocity of sound";
