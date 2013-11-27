@@ -94,9 +94,13 @@ redeclare replaceable function isentropicEnthalpy
   input AbsolutePressure p_downstream "downstream pressure";
   input ThermodynamicState refState "reference state for entropy";
   output SpecificEnthalpy h_is "Isentropic enthalpy";
+  protected
+  SpecificEntropy        s_ideal;
+  ThermodynamicState state_ideal;
 algorithm
-  assert((false),"This function is not defined in CoolProp");
-  h_is := p_downstream / refState.p * refState.h;
+  s_ideal     := specificEntropy(refState);
+  state_ideal := setState_psX(p_downstream,s_ideal);
+  h_is        := specificEnthalpy(state_ideal);
 end isentropicEnthalpy;
 
 end CoolPropMedium;
