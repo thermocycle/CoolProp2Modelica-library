@@ -12,6 +12,7 @@ import CoolProp2Modelica.Common.InputChoice;
   constant String substanceName = substanceNames[1]
   "Only one substance can be specified";
 
+
   redeclare record extends FluidConstants "external fluid constants"
     MolarMass molarMass "molecular mass";
     Temperature criticalTemperature "critical temperature";
@@ -35,6 +36,7 @@ import CoolProp2Modelica.Common.InputChoice;
     dipoleMoment=         2.0);
   constant InputChoice inputChoice=InputChoice.ph
   "Default choice of input variables for property computations";
+
 
   redeclare replaceable record ThermodynamicState
     FixedPhase phase(min=0,max=2,start=0);                                                   //SQmodif: removed "extends" and added FixedPhase with start value
@@ -78,23 +80,22 @@ import CoolProp2Modelica.Common.InputChoice;
 
 
   redeclare replaceable model extends BaseProperties(
-      p(stateSelect = if preferredMediumStates and
-                         (basePropertiesInputChoice == InputChoice.ph or
-                          basePropertiesInputChoice == InputChoice.pT or
-                          basePropertiesInputChoice == InputChoice.ps) then
-                              StateSelect.prefer else StateSelect.default),
-      T(stateSelect = if preferredMediumStates and
-                         (basePropertiesInputChoice == InputChoice.pT or
-                          basePropertiesInputChoice == InputChoice.dT) then
-                           StateSelect.prefer else StateSelect.default),
-      h(stateSelect = if preferredMediumStates and
-                         (basePropertiesInputChoice == InputChoice.ph or
-                          basePropertiesInputChoice == InputChoice.hs) then
-                           StateSelect.prefer else StateSelect.default),
-      d(stateSelect = if preferredMediumStates and
-                         basePropertiesInputChoice == InputChoice.dT then
-                           StateSelect.prefer else StateSelect.default))
-  import CoolProp2Modelica.Common.InputChoice;
+    p(stateSelect = if preferredMediumStates and
+                       (basePropertiesInputChoice == InputChoice.ph or
+                        basePropertiesInputChoice == InputChoice.pT or
+                        basePropertiesInputChoice == InputChoice.ps) then
+                            StateSelect.prefer else StateSelect.default),
+    T(stateSelect = if preferredMediumStates and
+                       (basePropertiesInputChoice == InputChoice.pT or
+                       basePropertiesInputChoice == InputChoice.dT) then
+                         StateSelect.prefer else StateSelect.default),
+    h(stateSelect = if preferredMediumStates and
+                       basePropertiesInputChoice == InputChoice.ph then
+                         StateSelect.prefer else StateSelect.default),
+    d(stateSelect = if preferredMediumStates and
+                       basePropertiesInputChoice == InputChoice.dT then
+                         StateSelect.prefer else StateSelect.default))
+    import CoolProp2Modelica.Common.InputChoice;
     parameter InputChoice basePropertiesInputChoice=inputChoice
     "Choice of input variables for property computations";
     FixedPhase phaseInput
@@ -102,8 +103,7 @@ import CoolProp2Modelica.Common.InputChoice;
     Integer phaseOutput
     "Phase output for medium, 2 for two-phase, 1 for one-phase";
     SpecificEntropy s(
-      stateSelect = if (basePropertiesInputChoice == InputChoice.ps or
-                        basePropertiesInputChoice == InputChoice.hs) then
+      stateSelect = if basePropertiesInputChoice == InputChoice.ps then
                        StateSelect.prefer else StateSelect.default)
     "Specific entropy";
     SaturationProperties sat "saturation property record";
@@ -118,11 +118,16 @@ import CoolProp2Modelica.Common.InputChoice;
     if (basePropertiesInputChoice == InputChoice.ph) then
       // Compute the state record (including the unique ID)
       state = setState_ph(p, h, phaseInput);
-      // Modification of the ExternalMedia code to reduce the number of calls:
-      // SQ, January 2013:
-      d = density(state);
-      T = temperature(state);
-      s = specificEntropy(state);
+      // Compute the remaining variables.
+      // It is not possible to use the standard functions like
+      // d = density(state), because differentiation for index
+      // reduction and change of state variables would not be supported
+      // density_ph(), which has an appropriate derivative annotation,
+      // is used instead. The implementation of density_ph() uses
+      // setState with the same inputs, so there's no actual overhead
+      d = density_ph(p, h, phaseInput);
+      s = specificEntropy_ph(p, h, phaseInput);
+      T = temperature_ph(p, h, phaseInput);
     elseif (basePropertiesInputChoice == InputChoice.dT) then
       state = setState_dT(d, T, phaseInput);
       h = specificEnthalpy(state);
@@ -144,28 +149,25 @@ import CoolProp2Modelica.Common.InputChoice;
     // Compute the saturation properties record
     sat = setSat_p_state(state);
     // Event generation for phase boundary crossing
-     if smoothModel then
+    if smoothModel then
       // No event generation
       phaseOutput = state.phase;
-     else
-       // Event generation at phase boundary crossing
-       if basePropertiesInputChoice == InputChoice.ph then
-         phaseOutput = if ((h > bubbleEnthalpy(sat) and h < dewEnthalpy(sat)) and
-                            p < fluidConstants[1].criticalPressure) then 2 else 1;
-       elseif basePropertiesInputChoice == InputChoice.dT then
-         phaseOutput = if  ((d < bubbleDensity(sat) and d > dewDensity(sat)) and
-                             T < fluidConstants[1].criticalTemperature) then 2 else 1;
-       elseif basePropertiesInputChoice == InputChoice.ps then
-         phaseOutput = if ((s > bubbleEntropy(sat) and s < dewEntropy(sat)) and
-                            p < fluidConstants[1].criticalPressure) then 2 else 1;
-       elseif basePropertiesInputChoice == InputChoice.hs then
-         phaseOutput = if ((s > bubbleEntropy(sat) and s < dewEntropy(sat)) and
+    else
+      // Event generation at phase boundary crossing
+      if basePropertiesInputChoice == InputChoice.ph then
+        phaseOutput = if ((h > bubbleEnthalpy(sat) and h < dewEnthalpy(sat)) and
                            p < fluidConstants[1].criticalPressure) then 2 else 1;
-       else
-         // basePropertiesInputChoice == pT
-         phaseOutput = 1;
-       end if;
-     end if;
+      elseif basePropertiesInputChoice == InputChoice.dT then
+        phaseOutput = if ((d < bubbleDensity(sat) and d > dewDensity(sat)) and
+                            T < fluidConstants[1].criticalTemperature) then 2 else 1;
+      elseif basePropertiesInputChoice == InputChoice.ps then
+        phaseOutput = if ((s > bubbleEntropy(sat) and s < dewEntropy(sat)) and
+                           p < fluidConstants[1].criticalPressure) then 2 else 1;
+      else
+        // basePropertiesInputChoice == pT
+        phaseOutput = 1;
+      end if;
+    end if;
   end BaseProperties;
 
 
@@ -343,7 +345,6 @@ import CoolProp2Modelica.Common.InputChoice;
   end density_ph;
 
 
-
   replaceable function density_ph_der "Total derivative of density_ph"
     extends Modelica.Icons.Function;
     input AbsolutePressure p "Pressure";
@@ -360,6 +361,7 @@ import CoolProp2Modelica.Common.InputChoice;
   annotation (Inline=true);
   end density_ph_der;
 
+
   redeclare function temperature_ph "returns temperature for given p and h"
     extends Modelica.Icons.Function;
     input AbsolutePressure p "Pressure";
@@ -374,8 +376,6 @@ import CoolProp2Modelica.Common.InputChoice;
     Inline=true,
     inverse(h=specificEnthalpy_pT(p=p, T=T, phase=phase)));
   end temperature_ph;
-
-
 
 
     function specificEntropy_ph "returns specific entropy for a given p and h"
@@ -394,8 +394,6 @@ import CoolProp2Modelica.Common.InputChoice;
     end specificEntropy_ph;
 
 
-
-
   redeclare function density_pT "Return density from p and T"
     extends Modelica.Icons.Function;
     input AbsolutePressure p "Pressure";
@@ -410,7 +408,6 @@ import CoolProp2Modelica.Common.InputChoice;
     Inline=true,
     inverse(p=pressure_dT(d=d, T=T, phase=phase)));
   end density_pT;
-
 
 
   redeclare function specificEnthalpy_pT
@@ -430,7 +427,6 @@ import CoolProp2Modelica.Common.InputChoice;
   end specificEnthalpy_pT;
 
 
-
     redeclare function pressure_dT
     extends Modelica.Icons.Function;
     input Density d "Density";
@@ -445,7 +441,6 @@ import CoolProp2Modelica.Common.InputChoice;
     Inline=true,
     inverse(d=density_pT(p=p, T=T, phase=phase)));
     end pressure_dT;
-
 
 
   redeclare function specificEnthalpy_dT
@@ -463,7 +458,6 @@ import CoolProp2Modelica.Common.InputChoice;
   end specificEnthalpy_dT;
 
 
-
   redeclare replaceable function density_ps "Return density from p and s"
     extends Modelica.Icons.Function;
     input AbsolutePressure p "Pressure";
@@ -477,8 +471,6 @@ import CoolProp2Modelica.Common.InputChoice;
   annotation (
     Inline=true);
   end density_ps;
-
-
 
 
   redeclare replaceable function specificEnthalpy_ps
@@ -509,6 +501,7 @@ import CoolProp2Modelica.Common.InputChoice;
     Inline=true,
     inverse(s=specificEntropy_pT(p=p, T=T, phase=phase)));
   end temperature_ps;
+
 
   redeclare function extends prandtlNumber
     /*  // If special definition in "C"
@@ -697,7 +690,6 @@ import CoolProp2Modelica.Common.InputChoice;
 */
     annotation(Inline = true);
   end specificEntropy;
-
 
 
   redeclare replaceable function extends isentropicEnthalpy
