@@ -37,29 +37,36 @@ algorithm
   state :=setState_hs(h, s, phase);
 end setState_hsX;
 
-replaceable function density_hs "Return density from h and s"
-  extends Modelica.Icons.Function;
-  input SpecificEnthalpy h "Specific enthalpy";
-  input SpecificEntropy s "Specific entropy";
-  input FixedPhase phase = 0 "2 for two-phase, 1 for one-phase, 0 if not known";
-  output Density d "Density";
-algorithm
-  d := density(setState_hs(h, s, phase));
-  // To be implemented:
-  //     annotation(derivative(noDerivative = phase) = density_hs_der,
-  //                Inline = true);
-end density_hs;
 
-replaceable function temperature_hs "Return temperature from h and s"
-  extends Modelica.Icons.Function;
-  input SpecificEnthalpy h "Specific enthalpy";
-  input SpecificEntropy s "Specific entropy";
-  input FixedPhase phase = 0 "2 for two-phase, 1 for one-phase, 0 if not known";
-  output Temperature T "Temperature";
-algorithm
-  T := temperature(setState_hs(h, s, phase));
-  annotation(Inline = true);
-end temperature_hs;
+
+  function density_hs "returns density for given h and s"
+    extends Modelica.Icons.Function;
+    input SpecificEnthalpy h "Enthalpy";
+    input SpecificEntropy s "Specific entropy";
+    input FixedPhase phase=0 "2 for two-phase, 1 for one-phase, 0 if not known";
+    output Density d "density";
+
+  algorithm
+    d := density_hs_state(h=h, s=s, state=setState_hs(h=h, s=s, phase=phase));
+
+  annotation (
+    Inline=true);
+  end density_hs;
+
+  function density_hs_state "returns density for given h and s"
+    extends Modelica.Icons.Function;
+    input SpecificEnthalpy h "Enthalpy";
+    input SpecificEntropy s "Specific entropy";
+    input ThermodynamicState state;
+    output Density d "density";
+
+  algorithm
+    d := density(state);
+
+  annotation (
+    Inline=false,
+    LateInline=true);
+  end density_hs_state;
 
 replaceable function pressure_hs "Return pressure from h and s"
   extends Modelica.Icons.Function;
@@ -68,9 +75,55 @@ replaceable function pressure_hs "Return pressure from h and s"
   input FixedPhase phase = 0 "2 for two-phase, 1 for one-phase, 0 if not known";
   output AbsolutePressure p "Pressure";
 algorithm
-  p := pressure(setState_hs(h,s, phase));
-  annotation(Inline = true);
+  p := pressure_hs_state(h=h, s=s, state=setState_hs(h=h, s=s, phase=phase));
+  annotation (
+    Inline = true,
+    inverse(
+      h=specificEnthalpy_ps(p=p, s=s, phase=phase),
+      s=specificEntropy_ph(p=p, h=h, phase=phase)));
 end pressure_hs;
+
+  function pressure_hs_state "returns pressure for given h and s"
+    extends Modelica.Icons.Function;
+    input SpecificEnthalpy h "Enthalpy";
+    input SpecificEntropy s "Specific entropy";
+    input ThermodynamicState state;
+    output AbsolutePressure p "Pressure";
+
+  algorithm
+    p := pressure(state);
+
+  annotation (
+    Inline=false,
+    LateInline=true);
+  end pressure_hs_state;
+
+replaceable function temperature_hs "Return temperature from h and s"
+  extends Modelica.Icons.Function;
+  input SpecificEnthalpy h "Specific enthalpy";
+  input SpecificEntropy s "Specific entropy";
+  input FixedPhase phase = 0 "2 for two-phase, 1 for one-phase, 0 if not known";
+  output Temperature T "Temperature";
+algorithm
+  T := temperature_hs_state(h=h, s=s, state=setState_hs(h=h, s=s, phase=phase));
+  annotation (
+    Inline = true);
+end temperature_hs;
+
+  function temperature_hs_state "returns temperature for given h and s"
+    extends Modelica.Icons.Function;
+    input SpecificEnthalpy h "Enthalpy";
+    input SpecificEntropy s "Specific entropy";
+    input ThermodynamicState state;
+    output Temperature T "Temperature";
+
+  algorithm
+    T := temperature(state);
+
+  annotation (
+    Inline=false,
+    LateInline=true);
+  end temperature_hs_state;
 
 redeclare replaceable function extends isentropicExponent
     "Return isentropic exponent"
@@ -94,9 +147,13 @@ redeclare replaceable function isentropicEnthalpy
   input AbsolutePressure p_downstream "downstream pressure";
   input ThermodynamicState refState "reference state for entropy";
   output SpecificEnthalpy h_is "Isentropic enthalpy";
+  protected
+  SpecificEntropy        s_ideal;
+  ThermodynamicState state_ideal;
 algorithm
-  assert((false),"This function is not defined in CoolProp");
-  h_is := p_downstream / refState.p * refState.h;
+  s_ideal     := specificEntropy(refState);
+  state_ideal := setState_psX(p_downstream,s_ideal);
+  h_is        := specificEnthalpy(state_ideal);
 end isentropicEnthalpy;
 
 end CoolPropMedium;
