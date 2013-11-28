@@ -259,30 +259,6 @@ import CoolProp2Modelica.Common.InputChoice;
   end setState_ps;
 
 
-  replaceable partial function setSat_p_state_dummy
-  "Return dummy values for the saturation properties from the state"
-    extends Modelica.Icons.Function;
-    input ThermodynamicState state;
-    output SaturationProperties sat "saturation property record";
-    // Standard definition
-  algorithm
-    sat.Tsat :=0;
-    sat.dTp  :=0;
-    sat.ddldp :=0;
-    sat.ddvdp  :=0;
-    sat.dhldp  :=0;
-    sat.dhvdp  :=0;
-    sat.dl  :=0;
-    sat.dv  :=0;
-    sat.hl  :=0;
-    sat.hv  :=0;
-    sat.psat  :=0;
-    sat.sigma  :=0;
-    sat.sl  :=0;
-    sat.sv  :=0;
-    annotation(Inline = true);
-  end setSat_p_state_dummy;
-
 
   replaceable partial function setSat_p_state
   "Return saturation properties from the state"
@@ -361,6 +337,30 @@ import CoolProp2Modelica.Common.InputChoice;
   annotation (Inline=true);
   end density_ph_der;
 
+
+  redeclare replaceable function extends density_derh_p
+  "Return derivative of density wrt enthalpy at constant pressure from state"
+    // Standard definition
+  algorithm
+    ddhp := state.ddhp;
+    /*  // If special definition in "C"
+  external "C" ddhp=  TwoPhaseMedium_density_derh_p_(state, mediumName, libraryName, substanceName)
+    annotation(Include="#include <CoolPropLib.h>", Library="CoolPropLib");
+*/
+    annotation(Inline = true);
+  end density_derh_p;
+
+  redeclare replaceable function extends density_derp_h
+  "Return derivative of density wrt pressure at constant enthalpy from state"
+    // Standard definition
+  algorithm
+    ddph := state.ddph;
+    /*  // If special definition in "C"
+  external "C" ddph=  TwoPhaseMedium_density_derp_h_(state, mediumName, libraryName, substanceName)
+    annotation(Include="#include <CoolPropLib.h>", Library="CoolPropLib");
+*/
+    annotation(Inline = true);
+  end density_derp_h;
 
   redeclare function temperature_ph "returns temperature for given p and h"
     extends Modelica.Icons.Function;
@@ -482,8 +482,10 @@ import CoolProp2Modelica.Common.InputChoice;
     "2 for two-phase, 1 for one-phase, 0 if not known";
     output SpecificEnthalpy h "specific enthalpy";
   algorithm
-    h := specificEnthalpy(setState_ps(p,s, phase));
-    annotation(Inline = true);
+    h := specificEnthalpy_ps_state(p=p, s=s, state=setState_ps(p=p, s=s, phase=phase));
+    annotation (
+    Inline = true,
+    inverse(s=specificEntropy_ph(p=p, h=h, phase=phase)));
   end specificEnthalpy_ps;
 
 
@@ -503,6 +505,48 @@ import CoolProp2Modelica.Common.InputChoice;
   end temperature_ps;
 
 
+  redeclare replaceable function extends density "Return density from state"
+    // Standard definition
+  algorithm
+    d := state.d;
+    annotation(Inline = true);
+  end density;
+
+  redeclare replaceable function extends pressure "Return pressure from state"
+    // Standard definition
+  algorithm
+    p := state.p;
+    /*  // If special definition in "C"
+  external "C" p=  TwoPhaseMedium_pressure_(state, mediumName, libraryName, substanceName)
+    annotation(Include="#include <CoolPropLib.h>", Library="CoolPropLib");
+*/
+    annotation(Inline = true);
+  end pressure;
+
+  redeclare replaceable function extends specificEnthalpy
+  "Return specific enthalpy from state"
+    // Standard definition
+  algorithm
+    h := state.h;
+    annotation(Inline = true);
+  end specificEnthalpy;
+
+  redeclare replaceable function extends specificEntropy
+  "Return specific entropy from state"
+    // Standard definition
+  algorithm
+    s := state.s;
+    annotation(Inline = true);
+  end specificEntropy;
+
+  redeclare replaceable function extends temperature
+  "Return temperature from state"
+    // Standard definition
+  algorithm
+    T := state.T;
+    annotation(Inline = true);
+  end temperature;
+
   redeclare function extends prandtlNumber
     /*  // If special definition in "C"
   external "C" T=  TwoPhaseMedium_prandtlNumber_(state, mediumName, libraryName, substanceName)
@@ -511,18 +555,6 @@ import CoolProp2Modelica.Common.InputChoice;
     annotation(Inline = true);
   end prandtlNumber;
 
-
-  redeclare replaceable function extends temperature
-  "Return temperature from state"
-    // Standard definition
-  algorithm
-    T := state.T;
-    /*  // If special definition in "C"
-  external "C" T=  TwoPhaseMedium_temperature_(state, mediumName, libraryName, substanceName)
-    annotation(Include="#include <CoolPropLib.h>", Library="CoolPropLib");
-*/
-    annotation(Inline = true);
-  end temperature;
 
 
   redeclare replaceable function extends velocityOfSound
@@ -577,42 +609,7 @@ import CoolProp2Modelica.Common.InputChoice;
   end specificHeatCapacityCv;
 
 
-  redeclare replaceable function extends density "Return density from state"
-    // Standard definition
-  algorithm
-    d := state.d;
-    /*  // If special definition in "C"
-  external "C" d=  TwoPhaseMedium_density_(state, mediumName, libraryName, substanceName)
-    annotation(Include="#include <CoolPropLib.h>", Library="CoolPropLib");
-*/
-    annotation(Inline = true);
-  end density;
 
-
-  redeclare replaceable function extends density_derh_p
-  "Return derivative of density wrt enthalpy at constant pressure from state"
-    // Standard definition
-  algorithm
-    ddhp := state.ddhp;
-    /*  // If special definition in "C"
-  external "C" ddhp=  TwoPhaseMedium_density_derh_p_(state, mediumName, libraryName, substanceName)
-    annotation(Include="#include <CoolPropLib.h>", Library="CoolPropLib");
-*/
-    annotation(Inline = true);
-  end density_derh_p;
-
-
-  redeclare replaceable function extends density_derp_h
-  "Return derivative of density wrt pressure at constant enthalpy from state"
-    // Standard definition
-  algorithm
-    ddph := state.ddph;
-    /*  // If special definition in "C"
-  external "C" ddph=  TwoPhaseMedium_density_derp_h_(state, mediumName, libraryName, substanceName)
-    annotation(Include="#include <CoolPropLib.h>", Library="CoolPropLib");
-*/
-    annotation(Inline = true);
-  end density_derp_h;
 
 
   redeclare replaceable function extends dynamicViscosity
@@ -627,18 +624,6 @@ import CoolProp2Modelica.Common.InputChoice;
     annotation(Inline = true);
   end dynamicViscosity;
 
-
-  redeclare replaceable function extends specificEnthalpy
-  "Return specific enthalpy from state"
-    // Standard definition
-  algorithm
-    h := state.h;
-    /*  // If special definition in "C"
-  external "C" h=  TwoPhaseMedium_specificEnthalpy_(state, mediumName, libraryName, substanceName)
-    annotation(Include="#include <CoolPropLib.h>", Library="CoolPropLib");
-*/
-    annotation(Inline = true);
-  end specificEnthalpy;
 
 
   redeclare replaceable function extends isothermalCompressibility
@@ -667,29 +652,6 @@ import CoolProp2Modelica.Common.InputChoice;
   end thermalConductivity;
 
 
-  redeclare replaceable function extends pressure "Return pressure from state"
-    // Standard definition
-  algorithm
-    p := state.p;
-    /*  // If special definition in "C"
-  external "C" p=  TwoPhaseMedium_pressure_(state, mediumName, libraryName, substanceName)
-    annotation(Include="#include <CoolPropLib.h>", Library="CoolPropLib");
-*/
-    annotation(Inline = true);
-  end pressure;
-
-
-  redeclare replaceable function extends specificEntropy
-  "Return specific entropy from state"
-    // Standard definition
-  algorithm
-    s := state.s;
-    /*  // If special definition in "C"
-    external "C" s=  TwoPhaseMedium_specificEntropy_(state, mediumName, libraryName, substanceName)
-    annotation(Include="#include <CoolPropLib.h>", Library="CoolPropLib");
-*/
-    annotation(Inline = true);
-  end specificEntropy;
 
 
   redeclare replaceable function extends isentropicEnthalpy

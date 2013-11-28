@@ -10,7 +10,7 @@ function specificEntropy_ph_der "time derivative of specificEntropy_ph"
 
 algorithm
   s_der := p_der*(-1.0/(state.d*state.T))
-         + h_der*(1.0/state.T);
+         + h_der*( 1.0/state.T);
 
 annotation (
   Inline=true);
