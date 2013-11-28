@@ -37,8 +37,6 @@ algorithm
   state :=setState_hs(h, s, phase);
 end setState_hsX;
 
-
-
   function density_hs "returns density for given h and s"
     extends Modelica.Icons.Function;
     input SpecificEnthalpy h "Enthalpy";
