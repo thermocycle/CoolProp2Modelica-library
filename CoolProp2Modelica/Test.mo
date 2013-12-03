@@ -1212,4 +1212,17 @@ package Test "Test models"
   redeclare package Medium = CoolProp2Modelica.Media.R600_CP);
 
   end R600_TestModel;
+
+  model test_incompressible_coolprop
+    replaceable package Medium =
+    CoolProp2Modelica.Media.DowQ_CP(substanceNames={"DowQ|calc_transport=1|debug=10"})
+    constrainedby Modelica.Media.Interfaces.PartialMedium "Medium model";
+    //CoolProp2Modelica.Media.R601_CP(substanceNames={"n-Pentane|calc_transport=1|debug=10"})
+    Medium.ThermodynamicState state = Medium.setState_pT(p,T);
+    Modelica.SIunits.Temperature T;
+    Modelica.SIunits.Pressure p;
+  equation
+    p = 10E5;
+    T = 273.15 + 15 + time*50;
+  end test_incompressible_coolprop;
 end Test;
