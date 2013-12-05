@@ -1230,7 +1230,7 @@ package Test "Test models"
 
   constant String inString = "LiBr|TTSE=0|EXTTP=1";
   constant Real[:] Xi = {0.33435};
-  constant String name = CoolProp2Modelica.Common.XtoSubstanceName(substanceName=inString,composition=Xi);
+  constant String name = CoolProp2Modelica.Common.XtoName(inString,Xi);
 
   equation
     assert(false, name, level=AssertionLevel.warning);
