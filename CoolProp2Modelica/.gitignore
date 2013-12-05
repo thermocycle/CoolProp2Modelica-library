@@ -1,0 +1,10 @@
+*.bak-mo
+*dsfinal.txt
+*dsin.txt
+*dslog.txt
+*dsmodel.c
+*dymosim
+*dymosim.exe
+*dymosim.exp
+*dymosim.lib
+*.mat
