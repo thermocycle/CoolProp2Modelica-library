@@ -1225,4 +1225,15 @@ package Test "Test models"
     p = 10E5;
     T = 273.15 + 15 + time*50;
   end test_incompressible_coolprop;
+
+  model Test_XiToName
+
+  constant String inString = "LiBr|TTSE=0|EXTTP=1";
+  constant Real[:] Xi = {0.33435};
+  constant String name = CoolProp2Modelica.Common.XtoSubstanceName(substanceName=inString,composition=Xi);
+
+  equation
+    assert(false, name, level=AssertionLevel.warning);
+
+  end Test_XiToName;
 end Test;

@@ -3,7 +3,6 @@ partial package CoolPropMedium
   extends ExternalTwoPhaseMedium(
   mediumName =     "CoolPropMedium",
   final libraryName =    "CoolProp");
-
   import CoolProp2Modelica.Common.InputChoice;
   redeclare replaceable model extends BaseProperties
   equation
@@ -43,10 +42,8 @@ end setState_hsX;
     input SpecificEntropy s "Specific entropy";
     input FixedPhase phase=0 "2 for two-phase, 1 for one-phase, 0 if not known";
     output Density d "density";
-
   algorithm
     d := density_hs_state(h=h, s=s, state=setState_hs(h=h, s=s, phase=phase));
-
   annotation (
     Inline=true);
   end density_hs;
@@ -57,10 +54,8 @@ end setState_hsX;
     input SpecificEntropy s "Specific entropy";
     input ThermodynamicState state;
     output Density d "density";
-
   algorithm
     d := density(state);
-
   annotation (
     Inline=false,
     LateInline=true);
@@ -87,10 +82,8 @@ end pressure_hs;
     input SpecificEntropy s "Specific entropy";
     input ThermodynamicState state;
     output AbsolutePressure p "Pressure";
-
   algorithm
     p := pressure(state);
-
   annotation (
     Inline=false,
     LateInline=true);
@@ -114,10 +107,8 @@ end temperature_hs;
     input SpecificEntropy s "Specific entropy";
     input ThermodynamicState state;
     output Temperature T "Temperature";
-
   algorithm
     T := temperature(state);
-
   annotation (
     Inline=false,
     LateInline=true);
@@ -153,5 +144,4 @@ algorithm
   state_ideal := setState_psX(p_downstream,s_ideal);
   h_is        := specificEnthalpy(state_ideal);
 end isentropicEnthalpy;
-
 end CoolPropMedium;
