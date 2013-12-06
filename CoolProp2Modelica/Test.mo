@@ -1226,14 +1226,28 @@ package Test "Test models"
     T = 273.15 + 15 + time*50;
   end test_incompressible_coolprop;
 
+  model test_incompressibleCoolPropMedium
+    replaceable package Medium =
+    CoolProp2Modelica.Media.LiBr_CP(substanceNames={"LiBr|calc_transport=1|debug=10"})
+    constrainedby Modelica.Media.Interfaces.PartialMedium "Medium model";
+    Medium.ThermodynamicState state = Medium.setState_pTX(p,T,X);
+    Medium.Temperature T;
+    Medium.AbsolutePressure p;
+    Medium.MassFraction[1] X;
+  equation
+    p    = 10E5;
+    T    = 273.15 + 15.0 + time * 50.0;
+    X[1] =   0.00 +  0.1 + time *  0.5;
+  end test_incompressibleCoolPropMedium;
+
   model Test_XiToName
 
   constant String inString = "LiBr|TTSE=0|EXTTP=1";
   constant Real[:] Xi = {0.33435};
-  constant String name = CoolProp2Modelica.Common.XtoName(inString,Xi);
-
-  equation
+  constant String name = CoolProp2Modelica.Common.XtoName(inString,Xi,debug=true);
+  Real dummy;
+  algorithm
+    dummy := 1;
     assert(false, name, level=AssertionLevel.warning);
-
   end Test_XiToName;
 end Test;

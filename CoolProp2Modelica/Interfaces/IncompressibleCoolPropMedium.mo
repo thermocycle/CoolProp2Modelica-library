@@ -1,12 +1,9 @@
 within CoolProp2Modelica.Interfaces;
 partial package IncompressibleCoolPropMedium
   "External incompressible medium with up to two components using CoolProp"
-  extends Modelica.Media.Interfaces.PartialTwoPhaseMedium(
+  extends Modelica.Media.Interfaces.PartialMedium(
     mediumName = "ExternalMedium",
-    singleState = true,
-    onePhase = true,
-    smoothModel = true,
-    fluidConstants = {externalFluidConstants});
+    singleState = true);
 import CoolProp2Modelica.Common.InputChoiceIncompressible;
   constant String libraryName = "CoolProp"
     "Name of the external fluid property computation library";
@@ -18,25 +15,10 @@ import CoolProp2Modelica.Common.InputChoiceIncompressible;
     AbsolutePressure criticalPressure "critical pressure";
     MolarVolume criticalMolarVolume "critical molar Volume";
   end FluidConstants;
-  constant FluidConstants externalFluidConstants = FluidConstants(
-    iupacName=            "unknown",
-    casRegistryNumber=    "unknown",
-    chemicalFormula=      "unknown",
-    structureFormula=     "unknown",
-    molarMass=            getMolarMass(),
-    criticalTemperature=  getCriticalTemperature(),
-    criticalPressure=     getCriticalPressure(),
-    criticalMolarVolume=  getCriticalMolarVolume(),
-    acentricFactor=       0,
-    triplePointTemperature=  280.0,
-    triplePointPressure=  500.0,
-    meltingPoint=         280,
-    normalBoilingPoint=   380.0,
-    dipoleMoment=         2.0);
   constant InputChoiceIncompressible inputChoice=InputChoiceIncompressible.pTX
     "Default choice of input variables for property computations, incompressibles are in p,T";
   redeclare replaceable record ThermodynamicState
-    FixedPhase phase(min=1,max=1,start=1); // Only single phase is allowed
+    Integer phase(min=1,max=1,start=1); // Only single phase is allowed
     PrandtlNumber Pr "prandtl number";
     Temperature T "temperature";
     VelocityOfSound a "velocity of sound";
@@ -68,16 +50,16 @@ import CoolProp2Modelica.Common.InputChoiceIncompressible;
     import CoolProp2Modelica.Common.InputChoiceIncompressible;
     parameter InputChoiceIncompressible basePropertiesInputChoice=inputChoice
       "Choice of input variables for property computations";
-    FixedPhase phaseInput
+    Integer phaseInput
       "Phase input for property computation functions, 2 for two-phase, 1 for one-phase, 0 if not known";
     Integer phaseOutput
       "Phase output for medium, 2 for two-phase, 1 for one-phase";
     SpecificEntropy s "Specific entropy";
     //SaturationProperties sat "saturation property record";
   equation
-    MM = externalFluidConstants.molarMass;
-    R = Modelica.Constants.R/MM;
     phaseInput = 1 "Force one-phase property computation";
+    R  = 0 "Gas constant (of mixture if applicable)";
+    MM = 0 "Molar mass (of mixture or single fluid)";
     if (basePropertiesInputChoice == InputChoiceIncompressible.phX) then
       state = setState_phX(p, h, Xi, phaseInput);
       d = density_phX(p, h, Xi, phaseInput);
@@ -97,25 +79,32 @@ import CoolProp2Modelica.Common.InputChoiceIncompressible;
     phaseOutput = 1;
   end BaseProperties;
 
-  redeclare function molarMass "Return the molar mass of the medium"
-      input ThermodynamicState state;
-      output MolarMass MM "Mixture molar mass";
-  algorithm
-    MM := fluidConstants[1].molarMass;
-  end molarMass;
-
   redeclare replaceable function setState_phX
     "Return thermodynamic state record from p and h"
     extends Modelica.Icons.Function;
     input AbsolutePressure p "pressure";
     input SpecificEnthalpy h "specific enthalpy";
     input MassFraction X[nX] "Mass fractions";
-    input FixedPhase phase = 1
-      "2 for two-phase, 1 for one-phase, 0 if not known";
+    input Integer phase = 1 "2 for two-phase, 1 for one-phase, 0 if not known";
     output ThermodynamicState state;
-  external "C" TwoPhaseMedium_setState_ph_(p, h, phase, state, mediumName, libraryName, CoolProp2Modelica.Common.XtoName(substanceName,X))
-    annotation(Include="#include <CoolPropLib.h>", Library="CoolPropLib");
+  protected
+    String name;
+  algorithm
+  name := CoolProp2Modelica.Common.XtoName(substanceName,X,debug=true);
+  state := setState_phX_library(p, h, phase, name);
   end setState_phX;
+
+  function setState_phX_library
+    "Return thermodynamic state record from p and h"
+    extends Modelica.Icons.Function;
+    input AbsolutePressure p "pressure";
+    input SpecificEnthalpy h "specific enthalpy";
+    input Integer phase = 1 "2 for two-phase, 1 for one-phase, 0 if not known";
+    input String name "name and mass fractions";
+    output ThermodynamicState state;
+  external "C" TwoPhaseMedium_setState_ph_(p, h, phase, state, mediumName, libraryName, name)
+    annotation(Include="#include <CoolPropLib.h>", Library="CoolPropLib");
+  end setState_phX_library;
 
   redeclare replaceable function setState_pTX
     "Return thermodynamic state record from p and T"
@@ -123,19 +112,48 @@ import CoolProp2Modelica.Common.InputChoiceIncompressible;
     input AbsolutePressure p "pressure";
     input Temperature T "temperature";
     input MassFraction X[:] "Mass fractions";
-    input FixedPhase phase = 1
-      "2 for two-phase, 1 for one-phase, 0 if not known";
+    input Integer phase = 1 "2 for two-phase, 1 for one-phase, 0 if not known";
     output ThermodynamicState state;
-  external "C" TwoPhaseMedium_setState_pT_(p, T, state, mediumName, libraryName, CoolProp2Modelica.Common.XtoName(substanceName,X))
-    annotation(Include="#include <CoolPropLib.h>", Library="CoolPropLib");
+  protected
+    String name;
+  algorithm
+  name := CoolProp2Modelica.Common.XtoName(substanceName,X,debug=true);
+  state := setState_pTX_library(p, T, phase, name);
   end setState_pTX;
+
+  function setState_pTX_library
+    "Return thermodynamic state record from p and T"
+    extends Modelica.Icons.Function;
+    input AbsolutePressure p "pressure";
+    input Temperature T "temperature";
+    input Integer phase = 1 "2 for two-phase, 1 for one-phase, 0 if not known";
+    input String name "name and mass fractions";
+    output ThermodynamicState state;
+  external "C" TwoPhaseMedium_setState_pT_(p, T, phase, state, mediumName, libraryName, name)
+    annotation(Include="#include <CoolPropLib.h>", Library="CoolPropLib");
+  end setState_pTX_library;
+
+  redeclare replaceable function setState_psX
+    "Return thermodynamic state record from p and s"
+    extends Modelica.Icons.Function;
+    input AbsolutePressure p "pressure";
+    input SpecificEntropy s "specific entropy";
+    input MassFraction X[nX] "Mass fractions";
+    input Integer phase = 1 "2 for two-phase, 1 for one-phase, 0 if not known";
+    output ThermodynamicState state;
+  protected
+    String in1 = CoolProp2Modelica.Common.XtoName(substanceName,X);
+    //assert(false, "Incompressibles only support pT and ph as inputs!", level=AssertionLevel.error);
+  external "C" TwoPhaseMedium_setState_ps_(p, s, phase, state, mediumName, libraryName, in1)
+    annotation(Include="#include <CoolPropLib.h>", Library="CoolPropLib");
+  end setState_psX;
 
   redeclare function density_phX "returns density for given p and h"
     extends Modelica.Icons.Function;
     input AbsolutePressure p "Pressure";
     input SpecificEnthalpy h "Enthalpy";
     input MassFraction X[nX] "Mass fractions";
-    input FixedPhase phase=0 "2 for two-phase, 1 for one-phase, 0 if not known";
+    input Integer phase=1 "2 for two-phase, 1 for one-phase, 0 if not known";
   //input ThermodynamicState state;
     output Density d "density";
   algorithm
@@ -197,7 +215,7 @@ import CoolProp2Modelica.Common.InputChoiceIncompressible;
     input AbsolutePressure p "Pressure";
     input SpecificEnthalpy h "Enthalpy";
     input MassFraction X[nX] "Mass fractions";
-    input FixedPhase phase=0 "2 for two-phase, 1 for one-phase, 0 if not known";
+    input Integer phase=1 "2 for two-phase, 1 for one-phase, 0 if not known";
     output Temperature T "Temperature";
   algorithm
     T := temperature_phX_state(p=p, h=h, X=X, state=setState_phX(p=p, h=h, X=X, phase=phase));
@@ -228,13 +246,12 @@ import CoolProp2Modelica.Common.InputChoiceIncompressible;
     input AbsolutePressure p "Pressure";
     input SpecificEnthalpy h "Specific Enthalpy";
     input MassFraction X[nX] "Mass fractions";
-    input FixedPhase phase=0 "2 for two-phase, 1 for one-phase, 0 if not known";
+    input Integer phase=1 "2 for two-phase, 1 for one-phase, 0 if not known";
     output SpecificEntropy s "Specific Entropy";
     algorithm
     s := specificEntropy_phX_state(p=p, h=h, X=X, state=setState_phX(p=p, h=h, X=X, phase=phase));
     annotation (
-    Inline=true,
-    inverse(h=specificEnthalpy_psX(p=p, s=s, X=X, phase=phase)));
+    Inline=true);
     end specificEntropy_phX;
 
   function specificEntropy_phX_state
@@ -278,7 +295,7 @@ import CoolProp2Modelica.Common.InputChoiceIncompressible;
     input AbsolutePressure p "Pressure";
     input Temperature T "Temperature";
     input MassFraction X[nX] "Mass fractions";
-    input FixedPhase phase=0 "2 for two-phase, 1 for one-phase, 0 if not known";
+    input Integer phase=1 "2 for two-phase, 1 for one-phase, 0 if not known";
     output Density d "Density";
   algorithm
     d := density_pTX_state(p=p, T=T, X=X, state=setState_pTX(p=p, T=T, X=X, phase=phase));
@@ -308,7 +325,7 @@ import CoolProp2Modelica.Common.InputChoiceIncompressible;
     input AbsolutePressure p "Pressure";
     input Temperature T "Temperature";
     input MassFraction X[nX] "Mass fractions";
-    input FixedPhase phase=0 "2 for two-phase, 1 for one-phase, 0 if not known";
+    input Integer phase=1 "2 for two-phase, 1 for one-phase, 0 if not known";
     output SpecificEnthalpy h "specific enthalpy";
   algorithm
     h := specificEnthalpy_pTX_state(p=p, T=T, X=X, state=setState_pTX(p=p, T=T, X=X, phase=phase));
@@ -341,7 +358,7 @@ import CoolProp2Modelica.Common.InputChoiceIncompressible;
   input AbsolutePressure p "Pressure";
   input Temperature T "Temperature";
   input MassFraction X[nX] "Mass fractions";
-  input FixedPhase phase=0 "2 for two-phase, 1 for one-phase, 0 if not known";
+  input Integer phase=1 "2 for two-phase, 1 for one-phase, 0 if not known";
   output SpecificEntropy s "Specific Entropy";
 
   algorithm
