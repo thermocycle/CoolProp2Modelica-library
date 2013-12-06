@@ -15,7 +15,7 @@ protected
 
 algorithm
   if noEvent(size(composition,1) <= 0) then
-    assert(false, "You are passing an empty composition vector, returning solution name only.", level=  AssertionLevel.warning);
+    assert(not debug, "You are passing an empty composition vector, returning name only: "+substanceName, level=  AssertionLevel.warning);
     result :=substanceName;
   else
     assert(noEvent(size(composition,1)==1), "Your mixture has more than two components, ignoring all but the first element.", level=  AssertionLevel.warning);
@@ -29,7 +29,11 @@ algorithm
       name   := Modelica.Utilities.Strings.substring(substanceName, 1, nextIndex-1);
       rest   := Modelica.Utilities.Strings.substring(substanceName, nextIndex, inLength);
     end if;
-    result := name + "-" + String(composition[1]) + rest;
+    if noEvent(noEvent(composition[1]<=0) or noEvent(composition[1]>=1)) then
+      result := substanceName;
+    else
+      result := name + "-" + String(composition[1]) + rest;
+    end if;
   end if;
 
   if noEvent(debug) then

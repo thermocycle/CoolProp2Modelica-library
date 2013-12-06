@@ -2,8 +2,9 @@ within CoolProp2Modelica.Interfaces;
 partial package IncompressibleCoolPropMedium
   "External incompressible medium with up to two components using CoolProp"
   extends Modelica.Media.Interfaces.PartialMedium(
-    mediumName = "ExternalMedium",
-    singleState = true);
+    mediumName =  "ExternalMedium",
+    singleState = true,
+    reducedX =    true);
 import CoolProp2Modelica.Common.InputChoiceIncompressible;
   constant String libraryName = "CoolProp"
     "Name of the external fluid property computation library";
@@ -83,6 +84,19 @@ import CoolProp2Modelica.Common.InputChoiceIncompressible;
     phaseOutput = 1;
   end BaseProperties;
 
+  replaceable function setState_ph
+    "Return thermodynamic state record from p and h"
+    extends Modelica.Icons.Function;
+    input AbsolutePressure p "pressure";
+    input SpecificEnthalpy h "specific enthalpy";
+    input Integer phase = 1 "2 for two-phase, 1 for one-phase, 0 if not known";
+    output ThermodynamicState state;
+  protected
+    String name;
+  algorithm
+  state := setState_ph_library(p, h, phase, substanceName);
+  end setState_ph;
+
   redeclare replaceable function setState_phX
     "Return thermodynamic state record from p and h"
     extends Modelica.Icons.Function;
@@ -94,12 +108,11 @@ import CoolProp2Modelica.Common.InputChoiceIncompressible;
   protected
     String name;
   algorithm
-  name := CoolProp2Modelica.Common.XtoName(substanceName,X,debug=false);
-  state := setState_phX_library(p, h, phase, name);
+  name := CoolProp2Modelica.Common.XtoName(substanceName,X);
+  state := setState_ph_library(p, h, phase, name);
   end setState_phX;
 
-  function setState_phX_library
-    "Return thermodynamic state record from p and h"
+  function setState_ph_library "Return thermodynamic state record from p and h"
     extends Modelica.Icons.Function;
     input AbsolutePressure p "pressure";
     input SpecificEnthalpy h "specific enthalpy";
@@ -108,7 +121,20 @@ import CoolProp2Modelica.Common.InputChoiceIncompressible;
     output ThermodynamicState state;
   external "C" TwoPhaseMedium_setState_ph_(p, h, phase, state, mediumName, libraryName, name)
     annotation(Include="#include <CoolPropLib.h>", Library="CoolPropLib");
-  end setState_phX_library;
+  end setState_ph_library;
+
+  replaceable function setState_pT
+    "Return thermodynamic state record from p and T"
+    extends Modelica.Icons.Function;
+    input AbsolutePressure p "pressure";
+    input Temperature T "temperature";
+    input Integer phase = 1 "2 for two-phase, 1 for one-phase, 0 if not known";
+    output ThermodynamicState state;
+  protected
+    String name;
+  algorithm
+  state := setState_pT_library(p, T, phase, substanceName);
+  end setState_pT;
 
   redeclare replaceable function setState_pTX
     "Return thermodynamic state record from p and T"
@@ -121,12 +147,11 @@ import CoolProp2Modelica.Common.InputChoiceIncompressible;
   protected
     String name;
   algorithm
-  name := CoolProp2Modelica.Common.XtoName(substanceName,X,debug=false);
-  state := setState_pTX_library(p, T, phase, name);
+  name := CoolProp2Modelica.Common.XtoName(substanceName,X);
+  state := setState_pT_library(p, T, phase, name);
   end setState_pTX;
 
-  function setState_pTX_library
-    "Return thermodynamic state record from p and T"
+  function setState_pT_library "Return thermodynamic state record from p and T"
     extends Modelica.Icons.Function;
     input AbsolutePressure p "pressure";
     input Temperature T "temperature";
@@ -135,7 +160,7 @@ import CoolProp2Modelica.Common.InputChoiceIncompressible;
     output ThermodynamicState state;
   external "C" TwoPhaseMedium_setState_pT_(p, T, state, mediumName, libraryName, name)
     annotation(Include="#include <CoolPropLib.h>", Library="CoolPropLib");
-  end setState_pTX_library;
+  end setState_pT_library;
 
   redeclare replaceable function setState_psX
     "Return thermodynamic state record from p and s"

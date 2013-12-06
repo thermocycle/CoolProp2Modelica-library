@@ -1213,36 +1213,37 @@ package Test "Test models"
 
   end R600_TestModel;
 
-  model test_incompressible_coolprop
-    replaceable package Medium =
-    CoolProp2Modelica.Media.DowQ_CP(substanceNames={"DowQ|calc_transport=1|debug=10"})
-    constrainedby Modelica.Media.Interfaces.PartialMedium "Medium model";
-    //CoolProp2Modelica.Media.R601_CP(substanceNames={"n-Pentane|calc_transport=1|debug=10"})
-    Medium.ThermodynamicState state = Medium.setState_pT(p,T);
-    Modelica.SIunits.Temperature T;
-    Modelica.SIunits.Pressure p;
-  equation
-    p = 10E5;
-    T = 273.15 + 15 + time*50;
-  end test_incompressible_coolprop;
 
   model test_incompressibleCoolPropMedium
-    replaceable package Medium =
-    CoolProp2Modelica.Media.LiBr_CP(substanceNames={"LiBr|calc_transport=1|debug=10"})
+    replaceable package Solution =
+    CoolProp2Modelica.Media.LiBr_CP(substanceNames={"LiBr|calc_transport=1|debug=10","dummyToMakeBasePropertiesWork"})
     constrainedby Modelica.Media.Interfaces.PartialMedium "Medium model";
-    Medium.ThermodynamicState state_var;
-    Medium.ThermodynamicState state_con;
-    Medium.Temperature T;
-    Medium.AbsolutePressure p;
-    Medium.MassFraction[1] X_var;
-    Medium.MassFraction[1] X_con;
+    Solution.ThermodynamicState state_var;
+    Solution.ThermodynamicState state_con;
+    Solution.Temperature T;
+    Solution.AbsolutePressure p;
+    Solution.MassFraction[1] X_var;
+    Solution.MassFraction[1] X_con;
+    Solution.BaseProperties varProps;
+    replaceable package Liquid =
+    CoolProp2Modelica.Media.DowQ_CP(substanceNames={"DowQ|calc_transport=1|debug=10"})
+    constrainedby Modelica.Media.Interfaces.PartialMedium "Medium model";
+    Liquid.ThermodynamicState state_liq;
+    Liquid.BaseProperties liqProps;
   equation
     p         = 10E5;
     T         = 273.15 + 15.0 + time * 50.0;
     X_var[1]  =   0.00 +  0.1 + time *  0.5;
     X_con[1]  =   0.00 +  0.1;
-    state_var = Medium.setState_pTX(p,T,X_var);
-    state_con = Medium.setState_pTX(p,T,X_con);
+    state_var = Solution.setState_pTX(p,T,X_var);
+    state_con = Solution.setState_pTX(p,T,X_con);
+    state_liq = Liquid.setState_pT(p,T);
+    // And now we do some testing with the BaseProperties
+    varProps.T = T;
+    varProps.p = p;
+    varProps.Xi = X_var;
+    liqProps.T = T;
+    liqProps.p = p;
   end test_incompressibleCoolPropMedium;
 
   model Test_XiToName
