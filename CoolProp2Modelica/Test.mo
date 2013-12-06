@@ -1230,14 +1230,19 @@ package Test "Test models"
     replaceable package Medium =
     CoolProp2Modelica.Media.LiBr_CP(substanceNames={"LiBr|calc_transport=1|debug=10"})
     constrainedby Modelica.Media.Interfaces.PartialMedium "Medium model";
-    Medium.ThermodynamicState state = Medium.setState_pTX(p,T,X);
+    Medium.ThermodynamicState state_var;
+    Medium.ThermodynamicState state_con;
     Medium.Temperature T;
     Medium.AbsolutePressure p;
-    Medium.MassFraction[1] X;
+    Medium.MassFraction[1] X_var;
+    Medium.MassFraction[1] X_con;
   equation
-    p    = 10E5;
-    T    = 273.15 + 15.0 + time * 50.0;
-    X[1] =   0.00 +  0.1 + time *  0.5;
+    p         = 10E5;
+    T         = 273.15 + 15.0 + time * 50.0;
+    X_var[1]  =   0.00 +  0.1 + time *  0.5;
+    X_con[1]  =   0.00 +  0.1;
+    state_var = Medium.setState_pTX(p,T,X_var);
+    state_con = Medium.setState_pTX(p,T,X_con);
   end test_incompressibleCoolPropMedium;
 
   model Test_XiToName

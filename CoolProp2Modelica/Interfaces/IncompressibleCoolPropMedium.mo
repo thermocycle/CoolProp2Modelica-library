@@ -17,11 +17,14 @@ import CoolProp2Modelica.Common.InputChoiceIncompressible;
   end FluidConstants;
   constant InputChoiceIncompressible inputChoice=InputChoiceIncompressible.pTX
     "Default choice of input variables for property computations, incompressibles are in p,T";
+
   redeclare replaceable record ThermodynamicState
-    Integer phase(min=1,max=1,start=1); // Only single phase is allowed
+    Integer phase(min=0,max=2,start=0); //Only single phase
     PrandtlNumber Pr "prandtl number";
     Temperature T "temperature";
     VelocityOfSound a "velocity of sound";
+    Modelica.SIunits.CubicExpansionCoefficient beta
+      "isobaric expansion coefficient";
     SpecificHeatCapacity cp "specific heat capacity cp";
     SpecificHeatCapacity cv "specific heat capacity cv";
     Density d "density";
@@ -31,6 +34,7 @@ import CoolProp2Modelica.Common.InputChoiceIncompressible;
       "derivative of density wrt pressure at constant enthalpy";
     DynamicViscosity eta "dynamic viscosity";
     SpecificEnthalpy h "specific enthalpy";
+    Modelica.SIunits.Compressibility kappa "compressibility";
     ThermalConductivity lambda "thermal conductivity";
     AbsolutePressure p "pressure";
     SpecificEntropy s "specific entropy";
@@ -90,7 +94,7 @@ import CoolProp2Modelica.Common.InputChoiceIncompressible;
   protected
     String name;
   algorithm
-  name := CoolProp2Modelica.Common.XtoName(substanceName,X,debug=true);
+  name := CoolProp2Modelica.Common.XtoName(substanceName,X,debug=false);
   state := setState_phX_library(p, h, phase, name);
   end setState_phX;
 
@@ -117,7 +121,7 @@ import CoolProp2Modelica.Common.InputChoiceIncompressible;
   protected
     String name;
   algorithm
-  name := CoolProp2Modelica.Common.XtoName(substanceName,X,debug=true);
+  name := CoolProp2Modelica.Common.XtoName(substanceName,X,debug=false);
   state := setState_pTX_library(p, T, phase, name);
   end setState_pTX;
 
@@ -129,7 +133,7 @@ import CoolProp2Modelica.Common.InputChoiceIncompressible;
     input Integer phase = 1 "2 for two-phase, 1 for one-phase, 0 if not known";
     input String name "name and mass fractions";
     output ThermodynamicState state;
-  external "C" TwoPhaseMedium_setState_pT_(p, T, phase, state, mediumName, libraryName, name)
+  external "C" TwoPhaseMedium_setState_pT_(p, T, state, mediumName, libraryName, name)
     annotation(Include="#include <CoolPropLib.h>", Library="CoolPropLib");
   end setState_pTX_library;
 
