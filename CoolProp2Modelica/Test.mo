@@ -1213,7 +1213,6 @@ package Test "Test models"
 
   end R600_TestModel;
 
-
   model test_incompressibleCoolPropMedium
     replaceable package Solution =
     CoolProp2Modelica.Media.LiBr_CP(substanceNames={"LiBr|calc_transport=1|debug=10","dummyToMakeBasePropertiesWork"})
