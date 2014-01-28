@@ -1,6 +1,10 @@
 within ;
-package CoolProp2Modelica 
+package CoolProp2Modelica "Interface between CoolProp and Modelica to compute thermophysical properties of working fluids"
 import SI = Modelica.SIunits;
+
+
+
+
 
 
   annotation (uses(Modelica(version="3.2")), Documentation(info="<html>
