@@ -3,10 +3,6 @@ package CoolProp2Modelica "Interface between CoolProp and Modelica to compute th
 import SI = Modelica.SIunits;
 
 
-
-
-
-
   annotation (uses(Modelica(version="3.2")), Documentation(info="<html>
 <p><h4><font color=\"#008000\">CoolProp2Modelica</font></h4></p>
 <p>The CoolProp2Modelica library provides an interface between the CoolProp thermodynamic library and Modelica. It is based on a modified version of ExternalMedia. The old functionalities of ExternalMedia, such as coupling with Fluidprop have been maintained and can still be used with CoolProp2Modelica.</p>

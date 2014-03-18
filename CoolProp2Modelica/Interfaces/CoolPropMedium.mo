@@ -3,6 +3,7 @@ partial package CoolPropMedium
   extends ExternalTwoPhaseMedium(
   mediumName =     "CoolPropMedium",
   final libraryName =    "CoolProp");
+  final constant String parsedName = CoolProp2Modelica.Common.CheckCoolPropOptions(substanceNames[1]);
   import CoolProp2Modelica.Common.InputChoice;
   redeclare replaceable model extends BaseProperties
   equation

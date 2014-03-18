@@ -1255,4 +1255,36 @@ package Test "Test models"
     dummy := 1;
     assert(false, name, level=AssertionLevel.warning);
   end Test_XiToName;
+
+  model CheckOptions
+    extends Modelica.Icons.Example;
+    String test;
+  algorithm
+    test := CoolProp2Modelica.Common.CheckCoolPropOptions("LiBr|enable_TTSE");
+    test := CoolProp2Modelica.Common.CheckCoolPropOptions("LiBr|enable_TTSE=0");
+    test := CoolProp2Modelica.Common.CheckCoolPropOptions("LiBr|enable_TTSE=1");
+    //
+    test := CoolProp2Modelica.Common.CheckCoolPropOptions("LiBr|enable_BICUBIC");
+    test := CoolProp2Modelica.Common.CheckCoolPropOptions("LiBr|enable_BICUBIC=0");
+    test := CoolProp2Modelica.Common.CheckCoolPropOptions("LiBr|enable_BICUBIC=1");
+    //
+    test := CoolProp2Modelica.Common.CheckCoolPropOptions("LiBr|enable_EXTTP");
+    test := CoolProp2Modelica.Common.CheckCoolPropOptions("LiBr|enable_EXTTP=0");
+    test := CoolProp2Modelica.Common.CheckCoolPropOptions("LiBr|enable_EXTTP=1");
+    //
+    test := CoolProp2Modelica.Common.CheckCoolPropOptions("LiBr|twophase_derivsmoothing_xend");
+    test := CoolProp2Modelica.Common.CheckCoolPropOptions("LiBr|twophase_derivsmoothing_xend=0.0");
+    test := CoolProp2Modelica.Common.CheckCoolPropOptions("LiBr|twophase_derivsmoothing_xend=0.1");
+    //
+    test := CoolProp2Modelica.Common.CheckCoolPropOptions("LiBr|rho_smoothing_xend");
+    test := CoolProp2Modelica.Common.CheckCoolPropOptions("LiBr|rho_smoothing_xend=0.0");
+    test := CoolProp2Modelica.Common.CheckCoolPropOptions("LiBr|rho_smoothing_xend=0.1");
+    //
+    test := CoolProp2Modelica.Common.CheckCoolPropOptions("LiBr|debug");
+    test := CoolProp2Modelica.Common.CheckCoolPropOptions("LiBr|debug=0");
+    test := CoolProp2Modelica.Common.CheckCoolPropOptions("LiBr|debug=100");
+    //
+    test := CoolProp2Modelica.Common.CheckCoolPropOptions("LiBr|enable_TTSE=1|debug=0|enable_EXTTP");
+    test := CoolProp2Modelica.Common.CheckCoolPropOptions("LiBr|enable_TTSE=1|debug=0|enableEXTTP=1");
+  end CheckOptions;
 end Test;
