@@ -23,6 +23,7 @@ See the intallation.txt file in [ExternalMedia library](https://github.com/model
 ## EXAMPLES:DEFINE A COOLPROP FLUID PACKAGE USING THE EXTERNALMEDIA LIBRARY
 
 CoolPropMedium:
+
 package R407c_CP_ExtMed "R134c - Coolprop - TC"
   extends ExternalMedia.Media.CoolPropMedium (
     mediumName = "R407c",
@@ -31,6 +32,7 @@ package R407c_CP_ExtMed "R134c - Coolprop - TC"
 end R407c_CP_ExtMed;
 
 IncompressibleCoolPropMedium:
+
 package DowQ_CP "DowthermQ properties from CoolProp"
   extends ExternalMedia.Media.IncompressibleCoolPropMedium(
   mediumName="DowQ",
