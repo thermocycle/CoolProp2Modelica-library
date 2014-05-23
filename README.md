@@ -20,3 +20,22 @@ You can now load the library by opening Modelica/ExteralMedia 3.2.1/package.mo f
 
 See the intallation.txt file in [ExternalMedia library](https://github.com/modelica/ExternalMedia). for installation instructions
 
+## EXAMPLES:DEFINE A COOLPROP FLUID PACKAGE USING THE EXTERNALMEDIA LIBRARY
+
+CoolPropMedium:
+package R407c_CP_ExtMed "R134c - Coolprop - TC"
+  extends ExternalMedia.Media.CoolPropMedium (
+    mediumName = "R407c",
+    substanceNames = {"R407c"},
+    ThermoStates=Modelica.Media.Interfaces.PartialMedium.Choices.IndependentVariables.ph);
+end R407c_CP_ExtMed;
+
+IncompressibleCoolPropMedium:
+package DowQ_CP "DowthermQ properties from CoolProp"
+  extends ExternalMedia.Media.IncompressibleCoolPropMedium(
+  mediumName="DowQ",
+  substanceNames={"DowQ|calc_transport=1"},
+  ThermoStates=Modelica.Media.Interfaces.PartialMedium.Choices.IndependentVariables.pT);
+end DowQ_CP;
+
+For other examples the user is redirected to the Test package of the ExternalMedia library
