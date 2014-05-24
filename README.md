@@ -13,6 +13,7 @@ Once the ExternalMediaLibrary is on your computer you need to build the External
 
 Check that no old version of ExternalMedia.lib file are stored in your Dymola/bin/lib directory.
 
+Alternatively, you can download the precompiled binary files from  [github](https://github.com/modelica/ExternalMedia/archive/master.zip).  On windows, in the Modelica/ExternalMedia 3.2.1/Resources/Library/win32 folder, copy the ExternalMedia ExternalMediaLib.Dymola-VS2008.lib to ExternalMedia ExternalMediaLib.lib if you are using visual studio 2008 for instance.  Same idea if you use Visual Studio 2010/2012, etc.
 
 You can now load the library by opening Modelica/ExteralMedia 3.2.1/package.mo file
 
