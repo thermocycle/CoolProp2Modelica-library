@@ -25,20 +25,21 @@ See the intallation.txt file in [ExternalMedia library](https://github.com/model
 
 CoolPropMedium:
 
+```
 package R407c_CP_ExtMed "R134c - Coolprop - TC"
   extends ExternalMedia.Media.CoolPropMedium (
     mediumName = "R407c",
     substanceNames = {"R407c"},
     ThermoStates=Modelica.Media.Interfaces.PartialMedium.Choices.IndependentVariables.ph);
 end R407c_CP_ExtMed;
-
+```
 IncompressibleCoolPropMedium:
-
+```
 package DowQ_CP "DowthermQ properties from CoolProp"
   extends ExternalMedia.Media.IncompressibleCoolPropMedium(
   mediumName="DowQ",
   substanceNames={"DowQ|calc_transport=1"},
   ThermoStates=Modelica.Media.Interfaces.PartialMedium.Choices.IndependentVariables.pT);
 end DowQ_CP;
-
+```
 For other examples the user is redirected to the Test package of the ExternalMedia library
